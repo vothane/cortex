@@ -1,10 +1,10 @@
 defmodule Layer do
-  @callback shape(layer, rows :: Integer, cols :: Integer) :: {:ok, {rows, cols}} | {:error, String.t}
-  @callback layer_name(layer, String.t) :: String.t
-  @callback parameters(layer, any) :: any
-  @callback forward_propogate(layer, any) :: any 
-  @callback backward_propogate(layer, any) :: any 
-  @callback output_shape(layer) :: any
+  @callback shape(struct, integer, integer) :: {:ok, {integer, integer}} | {:error, String.t}
+  @callback layer_name(structr, String.t) :: String.t
+  @callback parameters(struct, any) :: any
+  @callback forward_propogate(struct, any) :: any 
+  @callback backward_propogate(structr, any) :: any 
+  @callback output_shape(struct) :: any
 end
 
 defmodule Dense do
@@ -16,10 +16,18 @@ defmodule Dense do
   @behaviour Layer
 
   def shape(dense_layer, shape), do: Agent.update(dense_layer, fn state -> Map.put(state, :shape, shape) end)
+  
   def layer_name(dense_layer, name), do: Agent.update(dense_layer, fn state -> Map.put(state, :name, name) end)
+  
   def parameters(dense_layer, args), do: nil
-  def forward_propogate(dense_layer), do: nil
+  
+  def forward_propogate(dense_layer, X) do 
+    W = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
+    Matrex.dot(W, X)
+  end
+  
   def backward_propogate(dense_layer), do: nil
+  
   def output_shape(dense_layer) :: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
   
   def initialize(dense_layer, optimizer, init_fun // &:rand.uniform/1) do

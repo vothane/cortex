@@ -1,9 +1,9 @@
 defmodule Layer do
   @callback shape(struct, integer, integer) :: {:ok, {integer, integer}} | {:error, String.t}
-  @callback layer_name(structr, String.t) :: String.t
+  @callback layer_name(struct, String.t) :: String.t
   @callback parameters(struct, any) :: any
   @callback forward_propogate(struct, any) :: any 
-  @callback backward_propogate(structr, any) :: any 
+  @callback backward_propogate(struct, any) :: any 
   @callback output_shape(struct) :: any
 end
 
@@ -11,7 +11,7 @@ defmodule Dense do
 
   import Matrex
 
-  defstruct [shape: nil, weights: nil, limit: nil, name: nil]
+  defstruct [shape: nil, weights: nil, name: nil]
   
   @behaviour Layer
 
@@ -28,16 +28,15 @@ defmodule Dense do
   
   def backward_propogate(dense_layer), do: nil
   
-  def output_shape(dense_layer) :: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
+  def output_shape(dense_layer), do: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
   
-  def initialize(dense_layer, optimizer, init_fun // &:rand.uniform/1) do
-    limit = 1 / sqrt(input_shape[0])
-    Agent.update(dense_layer, fn state -> Map.put(state, :limit, limit) end)
-    Agent.update(dense_layer, fn state -> Map.put(state, :weights, Matrex.new(rows, columns, init_fun)) end)
+  def initialize(dense_layer, optimizer, init_fn \\ &:rand.uniform/1) do
+    {rows, columns} = Agent.get(dense_layer, fn state -> Map.get(state, :shape) end)
+    Agent.update(dense_layer, fn state -> Map.put(state, :weights, Matrex.new(rows, columns, init_fn)) end)
   end 
   
   def new() do
-    %Dense{shape: nil, weights: nil, limit: nil}
+    %Dense{shape: nil, weights: nil}
   end      
   
   def start_link(), do: Agent.start_link(fn -> Dense.new() end)
@@ -56,14 +55,14 @@ defmodule Activation do
   def parameters(activation_layer, args), do: nil
   def forward_propogate(activation_layer, X), do: Agent.get(activation_layer, fn state -> state.activation_fn end).(X)
   def backward_propogate(activation_layer), do: nil
-  def output_shape(activation_layer) :: Agent.get(activation_layer, fn state -> state.shape end)
+  def output_shape(activation_layer), do: Agent.get(activation_layer, fn state -> state.shape end)
   
   def initialize(activation_layer, activation_fn) do
-    Agent.update(dense_layer, fn state -> Map.put(state, :activation_fn, activation_fn) end)
+    Agent.update(activation_layer, fn state -> Map.put(state, :activation_fn, activation_fn) end)
   end 
   
   def new() do
-    %Activation{[activation_fn: nil, name: nil}
+    %Activation{activation_fn: nil, name: nil}
   end      
   
   def start_link(), do: Agent.start_link(fn -> Activation.new() end)

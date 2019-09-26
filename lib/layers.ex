@@ -11,7 +11,7 @@ defmodule Dense do
 
   import Matrex
 
-  defstruct [shape: nil, weights: nil, name: nil]
+  defstruct [shape: nil, weights: nil, name: nil, input: nil]
   
   @behaviour Layer
 
@@ -22,11 +22,22 @@ defmodule Dense do
   def parameters(dense_layer, args), do: nil
   
   def forward_propogate(dense_layer, X) do 
+    Agent.update(dense_layer, fn state -> Map.put(state, :input, X) end)
     W = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
     Matrex.dot(W, X)
   end
   
-  def backward_propogate(dense_layer), do: nil
+  def backward_propogate(dense_layer, accum_grad) do
+    W = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
+    input = Agent.get(dense_layer, fn state -> Map.get(state, :input) end)
+    grad_w = Matrex.dot_tn(input, accum_grad)
+    grad_w0 = accum_grad
+           |> Matrex.to_list_of_lists()
+           |> Enum.map(&Matrex.sum/1)
+           |> Matrex.new()
+    accum_grad = Matrex.dot_nt(accum_grad, W)
+    accum_grad
+  end
   
   def output_shape(dense_layer), do: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
   

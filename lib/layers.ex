@@ -35,6 +35,7 @@ defmodule Dense do
            |> Matrex.to_list_of_lists()
            |> Enum.map(&Matrex.sum/1)
            |> Matrex.new()
+           |> Matrex.transpose()
     accum_grad = Matrex.dot_nt(accum_grad, W)
     accum_grad
   end

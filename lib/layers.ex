@@ -49,14 +49,12 @@ defmodule Dense do
     Agent.update(dense_layer, fn state -> Map.put(state, :weights, Matrex.new(rows, columns, init_fn)) end)
   end 
   
-  def dense(opts) do
-    f = fn coll -> &(Keyword.get(coll, &1)) end # fuck elixir ur a fp lang act like 1 -> partial fns
-    g = f.(opts) # curry into f
-
-    %Dense{shape_input: g.(:shape_input), 
-           n: g.(:n),
-           weights: Matrex.new(elem(g.(:shape_input), 0), g.(:n)),
-           bias: Matrex.zeros(1, g.(:n))
+  def dense(%{shape_input: shape_input, n: n}) do
+    %Dense{
+           shape_input: shape_input, 
+           n: n,
+           weights: Matrex.new(elem(shape_input, 0), n, fn -> :rand.uniform() end),
+           bias: Matrex.zeros(1, n)
           }
   end      
   

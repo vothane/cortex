@@ -33,13 +33,11 @@ defmodule Dense do
     grad_w = Matrex.dot_tn(input, accum_grad)
     Agent.update(dense_layer, fn state -> Map.put(state, :weights, grad_w) end)
     grad_bias = accum_grad
-           |> Matrex.to_list_of_lists()
-           |> Enum.map(&Matrex.sum/1)
-           |> Matrex.new()
-           |> Matrex.transpose()
+             |> Enum.map(&Matrex.sum/1)
+             |> Matrex.new()
+             |> Matrex.transpose()
     Agent.update(dense_layer, fn state -> Map.put(state, :bias, grad_bias) end)
-    accum_grad = Matrex.dot_nt(accum_grad, W) # loss
-    accum_grad
+    Matrex.dot_nt(accum_grad, W)
   end
   
   def output_shape_input(dense_layer), do: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
@@ -49,18 +47,14 @@ defmodule Dense do
     Agent.update(dense_layer, fn state -> Map.put(state, :weights, Matrex.new(rows, columns, init_fn)) end)
   end 
   
-  def dense(%{shape_input: shape_input, n: n}) do
-    %Dense{
-           shape_input: shape_input, 
-           n: n,
-           weights: Matrex.new(elem(shape_input, 0), n, fn -> :rand.uniform() end),
-           bias: Matrex.zeros(1, n)
-          }
+  def dense(%{shape_input: shape_input, n: n}, init_fn \\ fn -> :rand.uniform() end) do
+    Agent.start_link(fn -> 
+       %Dense{shape_input: shape_input, 
+              n: n,
+              weights: Matrex.new(elem(shape_input, 0), n, init_fn),
+              bias: Matrex.ones(n)}
+    end)      
   end      
-  
-  def start_link(), do: Agent.start_link(fn -> Dense.new() end)
-
-  
 end
 
 defmodule Activation do

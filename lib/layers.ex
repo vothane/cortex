@@ -27,25 +27,15 @@ defmodule Dense do
     Matrex.add(Matrex.dot(W, X), Agent.get(dense_layer, fn state -> Map.get(state, :bias) end)) 
   end
   
-  def backward_propogate(dense_layer, accum_grad) do
-    W = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
-    input = Agent.get(dense_layer, fn state -> Map.get(state, :input) end)
+  def backward_propogate(dense_layer, accum_grad) do 
+    w = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
+    input = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
     grad_w = Matrex.dot_tn(input, accum_grad)
     Agent.update(dense_layer, fn state -> Map.put(state, :weights, grad_w) end)
-    grad_bias = accum_grad
-             |> Enum.map(&Matrex.sum/1)
-             |> Matrex.new()
-             |> Matrex.transpose()
-    Agent.update(dense_layer, fn state -> Map.put(state, :bias, grad_bias) end)
-    Matrex.dot_nt(accum_grad, W)
+    Matrex.dot_nt(accum_grad, w)
   end
   
   def output_shape_input(dense_layer), do: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
-  
-  def initialize(dense_layer, optimizer, init_fn \\ &:rand.uniform/1) do
-    {rows, columns} = Agent.get(dense_layer, fn state -> Map.get(state, :shape_input) end)
-    Agent.update(dense_layer, fn state -> Map.put(state, :weights, Matrex.new(rows, columns, init_fn)) end)
-  end 
   
   def dense(%{shape_input: shape_input, n: n}, init_fn \\ fn -> :rand.uniform() end) do
     Agent.start_link(fn -> 

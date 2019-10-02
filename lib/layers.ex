@@ -5,37 +5,46 @@ defmodule Layer do
   @callback forward_propogate(struct, any) :: any 
   @callback backward_propogate(struct, any) :: any 
   @callback output_shape(struct) :: any
+  @callback get(struct, atom) :: any
+  @callback put(struct, atom, any) :: any
 end
 
 defmodule Dense do
+  alias Dense
 
   import Matrex
 
   defstruct [input: nil, shape_input: nil, n: nil, weights: nil, bias: nil, name: nil]
   
   @behaviour Layer
-
-  def shape_input(dense_layer, shape_input), do: Agent.update(dense_layer, fn state -> Map.put(state, :shape_input, shape_input) end)
   
-  def layer_name(dense_layer, name), do: Agent.update(dense_layer, fn state -> Map.put(state, :name, name) end)
-  
+  @impl Layer
+  def shape_input(dense_layer, shape_input), do: put(dense_layer, :shape_input, shape_input)
+ 
+  @impl Layer
+  def layer_name(dense_layer, name), do: put(dense_layer, :name, name)
+ 
+  @impl Layer
   def parameters(dense_layer, args), do: nil
   
+  @impl Layer
   def forward_propogate(dense_layer, X) do 
-    Agent.update(dense_layer, fn state -> Map.put(state, :input, X) end)
-    W = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
-    Matrex.add(Matrex.dot(W, X), Agent.get(dense_layer, fn state -> Map.get(state, :bias) end)) 
+    put(dense_layer, :input, X)
+    W = get(dense_layer, :weights)
+    Matrex.add(Matrex.dot(W, X), get(dense_layer, :bias)) 
   end
   
+  @impl Layer
   def backward_propogate(dense_layer, accum_grad) do 
-    w = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
-    input = Agent.get(dense_layer, fn state -> Map.get(state, :weights) end)
+    w = get(dense_layer, :weights)
+    input = get(dense_layer,:weights)
     grad_w = Matrex.dot_tn(input, accum_grad)
-    Agent.update(dense_layer, fn state -> Map.put(state, :weights, grad_w) end)
+    put(dense_layer, :weights, grad_w)
     Matrex.dot_nt(accum_grad, w)
   end
   
-  def output_shape_input(dense_layer), do: Matrex.size(Agent.get(dense_layer, fn state -> state.weights end))
+  @impl Layer
+  def output_shape_input(dense_layer), do: Matrex.size(get(dense_layer, :weights))
   
   def dense(%{shape_input: shape_input, n: n}, init_fn \\ fn -> :rand.uniform() end) do
     Agent.start_link(fn -> 
@@ -44,7 +53,17 @@ defmodule Dense do
               weights: Matrex.new(elem(shape_input, 0), n, init_fn),
               bias: Matrex.ones(n)}
     end)      
-  end      
+  end 
+  
+  @impl Layer
+  def get(dense_layer, key) do
+    Agent.get(dense_layer, &Map.get(&1, key))
+  end
+  
+  @impl Layer
+  def put(dense_layer, key, value) do
+    Agent.update(dense_layer, &Map.put(&1, key, value))
+  end            
 end
 
 defmodule Activation do

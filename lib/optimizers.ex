@@ -1,12 +1,17 @@
 defmodule Optimizer do
   @callback update(struct, any, any) :: any
+  @callback get(struct, atom) :: any
+  @callback put(struct, atom, any) :: any
 end
 
-defmodule SGD do # StochasticGradientDescent
+defmodule SGD do # Stochastic Gradient Descent
   alias SGD
   
   defstruct [learning_rate: nil, momentum: nil, w_: nil]
-
+ 
+  @behaviour Optimizer
+  
+  @impl Optimizer
   def update(sgd, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
     if get(sgd, :w_) == nil do
       {rows, cols} = Matrex.size(w)
@@ -24,10 +29,12 @@ defmodule SGD do # StochasticGradientDescent
     Agent.start_link(fn -> %SGD{w_: w_, momentum: m, learning_rate: lr} end)      
   end
   
+  @impl Optimizer
   def get(sgd, key) do
     Agent.get(sgd, &Map.get(&1, key))
   end
   
+  @impl Optimizer
   def put(sgd, key, value) do
     Agent.update(sgd, &Map.put(&1, key, value))
   end       

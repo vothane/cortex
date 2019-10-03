@@ -3,7 +3,7 @@
 >...  
 >Battle-scarred shogun, explosion when my pen hits  
 >Tremendous, ultra-violet shine blind forensics  
->I inspect view through the future see millennium  
+>I inspect you view through the future see millennium  
 >...  
 >My beats travel like a vortex, through your spine  
 >To the top of your cerebral **cortex**  

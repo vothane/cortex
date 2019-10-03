@@ -4,6 +4,10 @@ defmodule Optimizer do
   @callback put(struct, atom, any) :: any
 end
 
+defprotocol Copy do
+  def copy(optimizer)
+end
+  
 defmodule SGD do # Stochastic Gradient Descent
   alias SGD
   
@@ -37,5 +41,15 @@ defmodule SGD do # Stochastic Gradient Descent
   @impl Optimizer
   def put(sgd, key, value) do
     Agent.update(sgd, &Map.put(&1, key, value))
-  end       
+  end
+  
+  defimpl Copy do
+    def copy(sgd) do
+      Agent.start_link(fn -> 
+        %SGD{w_: SGD.get(sgd, :w_), 
+             momentum: SGD.get(sgd, :momentum), 
+             learning_rate: SGD.get(sgd, :learning_rate)} 
+        end)
+    end
+  end
 end    

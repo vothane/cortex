@@ -5,6 +5,7 @@ defmodule Layer do
   @callback forward_propogate(struct, any) :: any 
   @callback backward_propogate(struct, any) :: any 
   @callback output_shape(struct) :: any
+  @callback init(struct, struct) :: any
   @callback get(struct, atom) :: any
   @callback put(struct, atom, any) :: any
 end
@@ -14,7 +15,7 @@ defmodule Dense do
 
   import Matrex
 
-  defstruct [input: nil, shape_input: nil, n: nil, weights: nil, bias: nil, name: nil]
+  defstruct [input: nil, shape_input: nil, n: nil, weights: nil, bias: nil, name: nil, w_opt: nil, bias_opt: nil]
   
   @behaviour Layer
   
@@ -46,14 +47,13 @@ defmodule Dense do
   @impl Layer
   def output_shape_input(dense_layer), do: Matrex.size(get(dense_layer, :weights))
   
-  def dense(%{shape_input: shape_input, n: n}, init_fn \\ fn -> :rand.uniform() end) do
-    Agent.start_link(fn -> 
-       %Dense{shape_input: shape_input, 
-              n: n,
-              weights: Matrex.new(elem(shape_input, 0), n, init_fn),
-              bias: Matrex.ones(n)}
-    end)      
-  end 
+  @impl Layer
+  def init(dense_layer, optimizer, init_fn \\ &(:rand.uniform(&1))) do
+    put(dense_layer, :weights, Matrex.new(elem(get(dense_layer, :shape_input), 0), get(dense_layer, :n), init_fn))
+    put(dense_layer, :bias, Matrex.ones(get(dense_layer, :n)))
+    put(dense_layer, :w_opt, optimizer)
+    put(dense_layer, :bias_opt, Copy.copy(optimizer))
+  end
   
   @impl Layer
   def get(dense_layer, key) do
@@ -63,7 +63,11 @@ defmodule Dense do
   @impl Layer
   def put(dense_layer, key, value) do
     Agent.update(dense_layer, &Map.put(&1, key, value))
-  end            
+  end    
+  
+  def dense(%{shape_input: shape_input, n: n}) do
+    Agent.start_link(fn -> %Dense{shape_input: shape_input, n: n} end)      
+  end 
 end
 
 defmodule Activation do

@@ -48,6 +48,10 @@ defmodule SGD do # Stochastic Gradient Descent
   
   @impl Optimizer
   def copy!(sgd) do
-    :ok
+    Agent.start_link(fn -> 
+      %SGD{w_: Map.get(sgd, :w_), 
+           momentum: Map.get(sgd, :momentum), 
+           learning_rate: Map.get(sgd, :learning_rate)} 
+    end)
   end
 end    

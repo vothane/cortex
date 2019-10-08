@@ -59,7 +59,7 @@ defmodule Dense do
     put(dense_layer, :weights, Matrex.new(elem(get(dense_layer, :shape_input), 0), get(dense_layer, :n), fn -> :rand.uniform() end))
     put(dense_layer, :bias, zeros(get(dense_layer, :n)))
     put(dense_layer, :w_opt, optimizer)
-    put(dense_layer, :bias_opt, Optimizer.copy(Agent.get(optimizer, &(&1))))
+    put(dense_layer, :bias_opt, Optimizer.copy(optimizer))
   end
   
   @impl Layer

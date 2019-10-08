@@ -1,13 +1,19 @@
 defmodule Optimizer do
-  @callback update(struct, any, any) :: any
+  @callback update!(struct, any, any) :: any
   @callback get(struct, atom) :: any
   @callback put(struct, atom, any) :: any
   @callback copy!(struct) :: any
   
   def copy(optimizer) do
-    %module{} = optimizer
-    IO.inspect module 
+    opt = Agent.get(optimizer, &(&1))
+    %module{} = opt
     module.copy!(optimizer) 
+  end
+  
+  def update(optimizer, w, grad_wrt_w) do
+    opt = Agent.get(optimizer, &(&1))
+    %module{} = opt
+    module.update!(optimizer, w, grad_wrt_w) 
   end
 end
   
@@ -19,7 +25,7 @@ defmodule SGD do # Stochastic Gradient Descent
   @behaviour Optimizer
   
   @impl Optimizer
-  def update(sgd, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
+  def update!(sgd, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
     if get(sgd, :w_) == nil do
       {rows, cols} = Matrex.size(w)
       put(sgd, :w_, Matrex.zeros(rows, cols))

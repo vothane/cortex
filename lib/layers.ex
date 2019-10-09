@@ -40,14 +40,16 @@ defmodule Dense do
   @impl Layer
   def backward_propogate(dense_layer, accum_grad) do 
     w = get(dense_layer, :weights)
+    bias = get(dense_layer, :bias)
     input = get(dense_layer, :layer_input)
     grad_w = dot_tn(input, accum_grad)
-    put(dense_layer, :weights, grad_w)
-    grad_bias = accum_grad
-             |> transpose()
-             |> to_list_of_lists()
-             |> Enum.reduce([], fn x, acc -> acc ++ [Enum.sum(x)] end)
-    put(dense_layer, :bias, Matrex.new([grad_bias]))
+    grad_bias = Utils.sum_of_cols(accum_grad)
+    _w =  Optimizer.update(get(dense_layer, :w_opt), w, grad_w)
+    put(dense_layer, :weights, _w)
+    
+    _bias = Optimizer.update(get(dense_layer, :bias_opt), bias, grad_bias)
+    put(dense_layer, :bias, _bias)    
+    
     Matrex.dot_nt(accum_grad, w)
   end
   
@@ -57,7 +59,7 @@ defmodule Dense do
   @impl Layer
   def init(dense_layer, optimizer, init_fn \\ &(:rand.uniform(&1))) do
     put(dense_layer, :weights, Matrex.new(elem(get(dense_layer, :shape_input), 0), get(dense_layer, :n), fn -> :rand.uniform() end))
-    put(dense_layer, :bias, zeros(get(dense_layer, :n)))
+    put(dense_layer, :bias, zeros(1, get(dense_layer, :n)))
     put(dense_layer, :w_opt, optimizer)
     put(dense_layer, :bias_opt, Optimizer.copy(optimizer))
   end

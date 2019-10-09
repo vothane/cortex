@@ -6,7 +6,7 @@ defmodule LayerTest do
   
   test "dense layer back propogation" do
     {status, dense_layer} = Dense.dense(%{shape_input: {1,2}, n: 2})
-    {status, sgd} = SGD.sgd(%{w_: nil, momentum: 0.1, learning_rate: 0.1})
+    {status, sgd} = SGD.sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
     Dense.init(dense_layer, sgd)
     Dense.put(dense_layer, :weights, Matrex.new([[0.5, 0.5], [0.5, 0.5]]))
     Dense.put(dense_layer, :layer_input, Matrex.new([[1, 0]]))  
@@ -15,9 +15,9 @@ defmodule LayerTest do
     bias = Dense.get(dense_layer, :bias)
     updates = Dense.backward_propogate(dense_layer, err)
     
-    # assert w == Matrex.new([[0.495, 0.495], [0.5, 0.5]])
-    assert bias == Matrex.new([[0.495, 0.495], [0.5, 0.5]])
-    assert updates == Matrex.new([[0.495, 0.5]])
+    assert w == Matrex.new([[0.5, 0.5], [0.5, 0.5]])
+    #Sassert bias == Matrex.new([[0.5, 0.5]])
+    assert updates == Matrex.new([[0.5, 0.5]])
   end
 end
 

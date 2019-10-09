@@ -29,11 +29,10 @@ defmodule SGD do # Stochastic Gradient Descent
     if get(sgd, :w_) == nil do
       {rows, cols} = Matrex.size(w)
       put(sgd, :w_, Matrex.zeros(rows, cols))
-    end     
+    end 
     w_ = get(sgd, :w_)
     learning_rate = get(sgd, :learning_rate)
     momentum = get(sgd, :momentum)
-    
     w_ = Matrex.add(Matrex.multiply(w_, momentum), Matrex.multiply(grad_wrt_w, (1 - momentum)))
     Matrex.subtract(w, Matrex.multiply(w_, learning_rate))
   end
@@ -54,10 +53,12 @@ defmodule SGD do # Stochastic Gradient Descent
   
   @impl Optimizer
   def copy!(sgd) do
+    {status, opt} =
     Agent.start_link(fn -> 
-      %SGD{w_: Map.get(sgd, :w_), 
-           momentum: Map.get(sgd, :momentum), 
-           learning_rate: Map.get(sgd, :learning_rate)} 
+      %SGD{w_: get(sgd, :w_), 
+           momentum: get(sgd, :momentum), 
+           learning_rate: get(sgd, :learning_rate)} 
     end)
+    opt
   end
 end    

@@ -5,14 +5,12 @@ defmodule Optimizer do
   @callback copy!(struct) :: any
   
   def copy(optimizer) do
-    opt = Agent.get(optimizer, &(&1))
-    %module{} = opt
+    %module{}  = Agent.get(optimizer, &(&1))
     module.copy!(optimizer) 
   end
   
   def update(optimizer, w, grad_wrt_w) do
-    opt = Agent.get(optimizer, &(&1))
-    %module{} = opt
+    %module{} = Agent.get(optimizer, &(&1))
     module.update!(optimizer, w, grad_wrt_w) 
   end
 end

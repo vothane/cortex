@@ -13,9 +13,11 @@ end
 defmodule Dense do
   import Matrex
   import Optimizer
+  import Utils
   
   alias Matrex
   alias Dense
+  alias Utils
   
   defstruct [layer_input: nil, shape_input: nil, n: nil, trainable: true, weights: nil, bias: nil, w_opt: nil, bias_opt: nil, output_shape: nil]
   
@@ -31,10 +33,11 @@ defmodule Dense do
   def parameters(dense_layer, args), do: nil
   
   @impl Layer
-  def forward_propogate(dense_layer, X) do 
-    put(dense_layer, :input, X)
-    W = get(dense_layer, :weights)
-    add(dot(W, X), get(dense_layer, :bias)) 
+  def forward_propogate(dense_layer, x) do 
+    put(dense_layer, :input, x)
+    w = get(dense_layer, :weights)
+    b = get(dense_layer, :bias) 
+    add_m_v(dot(x, w), b)
   end
   
   @impl Layer
@@ -43,7 +46,7 @@ defmodule Dense do
     bias = get(dense_layer, :bias)
     input = get(dense_layer, :layer_input)
     grad_w = dot_tn(input, accum_grad)
-    grad_bias = Utils.sum_of_cols(accum_grad)
+    grad_bias = sum_of_cols(accum_grad)
     _w =  Optimizer.update(get(dense_layer, :w_opt), w, grad_w)
     put(dense_layer, :weights, _w)
     

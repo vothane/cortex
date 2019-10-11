@@ -19,4 +19,18 @@ defmodule UtilsTest do
     sum = Utils.sum_of_rows(m)
     assert sum == Matrex.new([[120], [75], [84]])
   end
+   
+  test "addition of matrix with vector" do
+    arr = [[1, 1, 1, 1, 1],    
+           [2, 2, 2, 2, 2],   
+           [3, 3, 3, 3, 3]]   
+    m = Matrex.new(arr)
+    v = Matrex.new([[1, 1, 1, 1, 1]])
+    sum = Utils.add_m_v(m, v)
+    assert sum == Matrex.new([[2, 2, 2, 2, 2],   
+                              [3, 3, 3, 3, 3],
+                              [4, 4, 4, 4, 4]])
+  end
+  
+  
 end  

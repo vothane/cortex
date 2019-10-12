@@ -86,24 +86,38 @@ defmodule Activation do
 
   import Matrex
 
-  defstruct [shape_input: nil, activation_fn: nil, name: nil]
+  defstruct [activation_fn: nil, input: nil, trainable: true, name: nil]
   
   @behaviour Layer
-
-  def set_shape_input(activation_layer, shape_input), do: nil
-  def layer_name(activation_layer, name), do: Agent.update(activation_layer, fn state -> Map.put(state, :name, name) end)
-  def parameters(activation_layer, args), do: nil
-  def forward_propogate(activation_layer, X), do: Agent.get(activation_layer, fn state -> state.activation_fn end).(X)
-  def backward_propogate(activation_layer), do: nil
-  def output_shapet(activation_layer), do: Agent.get(activation_layer, fn state -> state.shape_input end)
   
-  def initialize(activation_layer, activation_fn) do
-    Agent.update(activation_layer, fn state -> Map.put(state, :activation_fn, activation_fn) end)
+  @impl Layer
+  def forward_propogate(activation_layer, m) do
+    put(activation_layer, :input, m)
+    Activations.activate(activation_layer, m))
+  end
+  
+  @impl Layer
+  def backward_propogate(activation_layer, accum_grad) do
+    layer_input = get(activation_layer, :input)
+    Matrex.multiply(accum_grad, Activations.gradient(activation_layer, layer_input))
+  end
+  
+  @impl Layer
+  def output_shape(activation_layer) do
+    Matrex.size(get(activation_layer, :input))
+  end
+  
+  @impl Layer
+  def get(activation_layer, key) do
+    Agent.get(activation_layer, &Map.get(&1, key))
+  end
+  
+  @impl Layer
+  def put(activation_layer, key, value) do
+    Agent.update(activation_layer, &Map.put(&1, key, value))
+  end  
+  
+  def activation(%{activation_fn: activation}) do
+    Agent.start_link(fn -> %Activation{activation_fn: activation]} end)      
   end 
-  
-  def new() do
-    %Activation{activation_fn: nil, name: nil}
-  end      
-  
-  def start_link(), do: Agent.start_link(fn -> Activation.new() end)
 end

@@ -1,5 +1,6 @@
 defmodule Layer do
-  @callback set_shape_input(struct, integer, integer) :: {:ok, {integer, integer}} | {:error, String.t}
+  @type dim :: {integer, integer}
+  @callback set_shape_input(struct, dim) :: {:ok, {integer, integer}} | {:error, String.t}
   @callback layer_name(struct, String.t) :: String.t
   @callback parameters(struct, any) :: any
   @callback forward_propogate(struct, any) :: any 
@@ -93,13 +94,15 @@ defmodule Activation do
   @impl Layer
   def forward_propogate(activation_layer, m) do
     put(activation_layer, :input, m)
-    Activations.activate(activation_layer, m))
+    act_fn = get(activation_layer, :activation_fn)
+    Activations.activate(act_fn, m)
   end
   
   @impl Layer
   def backward_propogate(activation_layer, accum_grad) do
     layer_input = get(activation_layer, :input)
-    Matrex.multiply(accum_grad, Activations.gradient(activation_layer, layer_input))
+    act_fn = get(activation_layer, :activation_fn)
+    Matrex.multiply(accum_grad, Activations.gradient(act_fn, layer_input))
   end
   
   @impl Layer
@@ -115,9 +118,9 @@ defmodule Activation do
   @impl Layer
   def put(activation_layer, key, value) do
     Agent.update(activation_layer, &Map.put(&1, key, value))
-  end  
+  end
   
   def activation(%{activation_fn: activation}) do
-    Agent.start_link(fn -> %Activation{activation_fn: activation]} end)      
-  end 
+    Agent.start_link(fn -> %Activation{activation_fn: activation} end)
+  end
 end

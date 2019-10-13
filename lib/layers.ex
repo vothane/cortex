@@ -58,7 +58,7 @@ defmodule Dense do
   end
   
   @impl Layer
-  def output_shape_input(dense_layer), do: size(get(dense_layer, :weights))
+  def output_shape(dense_layer), do: size(get(dense_layer, :weights))
   
   @impl Layer
   def init(dense_layer, optimizer, init_fn \\ &(:rand.uniform(&1))) do

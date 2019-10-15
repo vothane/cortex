@@ -25,16 +25,16 @@ defmodule NeuralNetwork do
     Agent.update(nn, fn state -> Map.put(state, :layers, layers_) end)
   end
   
-  defp forward_propogate(nn, X) do
+  defp forward_propogate(nn, m) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
-    f = fn l -> %m{}; m end
-    Enum.reduce(layers, X, &(f(&1).forward_propogate(&1, &2)))
+    f = fn l -> %mod{} = l; mod end
+    Enum.reduce(layers, m, &(f.(&1).forward_propogate(&1, &2)))
   end  
 
   def backward_propogate(nn, loss_grad) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
-    f = fn l -> %m{}; m end         
-    Enum.reduce(Enum.reverse(layers), loss_grad, &(f(&1).backward_propogate(&1, &2)))
+    f = fn l -> %m{} = l; m end         
+    Enum.reduce(Enum.reverse(layers), loss_grad, &(f.(&1).backward_propogate(&1, &2)))
   end  
 end  
 

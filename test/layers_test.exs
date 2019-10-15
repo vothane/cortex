@@ -32,11 +32,55 @@ defmodule LayerTest do
   end
 end
 
-defmodule DenseTest do
+defmodule ActivationsTest do
   use ExUnit.Case
-  doctest Layer
+  doctest Activations
+  
+  import Matrex
 
-  test "" do
-    assert 1 == 1
+  test "activation propogatation with sigmoid" do
+    sigmoid = %Sigmoid{}
+    {status, activ_layer} = Activation.activation(%{activation_fn: sigmoid})
+    m = Matrex.new([[0.5, 0.5], [0.5, 0.5]])
+    
+    Activation.put(activ_layer, :activation_fn, sigmoid)
+    f_m = Activation.forward_propogate(activ_layer, m)  
+    forward_m = Matrex.apply(f_m, fn x -> Float.round(x, 5) end)
+    
+    b_m = Activation.backward_propogate(activ_layer, Matrex.new([[0.25, 0.25]]))  
+    backward_m = Matrex.apply(b_m, fn x -> Float.round(x, 5) end)
+    
+    assert forward_m == Matrex.new([[0.62246, 0.62246], [0.62246, 0.62246]])
+    assert backward_m == Matrex.new([[0.05875, 0.05875], [0.05875, 0.05875]])
+  end
+
+  test "activation propogatation with tanh" do
+    tanh = %TanH{}
+    {status, activ_layer} = Activation.activation(%{activation_fn: tanh})
+    m = Matrex.new([[0.5, 0.5], [0.5, 0.5]])
+    
+    Activation.put(activ_layer, :activation_fn, tanh)
+    f_m = Activation.forward_propogate(activ_layer, m)  
+    forward_m = Matrex.apply(f_m, fn x -> Float.round(x, 5) end)
+    
+    b_m = Activation.backward_propogate(activ_layer, Matrex.new([[0.25, 0.25]]))  
+    backward_m = Matrex.apply(b_m, fn x -> Float.round(x, 5) end)
+    
+    assert forward_m == Matrex.new([[0.46212, 0.46212], [0.46212, 0.46212]])
+    assert backward_m == Matrex.new([[0.19661, 0.19661], [0.19661, 0.19661]])
+  end
+
+  test "activation propogatation with relu" do
+    relu = %ReLU{}
+    {status, activ_layer} = Activation.activation(%{activation_fn: relu})
+    m = Matrex.new([[0.5, 0.5], [0.5, 0.5]])
+    
+    Activation.put(activ_layer, :activation_fn, relu)
+    forward_m = Activation.forward_propogate(activ_layer, m)  
+    
+    backward_m = Activation.backward_propogate(activ_layer, Matrex.new([[0.25, 0.25]]))  
+    
+    assert forward_m == Matrex.new([[0.5, 0.5], [0.5, 0.5]])
+    assert backward_m == Matrex.new([[0.25, 0.25], [0.25, 0.25]])
   end
 end

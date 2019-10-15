@@ -86,7 +86,8 @@ end
 defmodule Activation do
 
   import Matrex
-
+  import Utils
+  
   defstruct [activation_fn: nil, input: nil, trainable: true, name: nil]
   
   @behaviour Layer
@@ -102,7 +103,7 @@ defmodule Activation do
   def backward_propogate(activation_layer, accum_grad) do
     layer_input = get(activation_layer, :input)
     act_fn = get(activation_layer, :activation_fn)
-    Matrex.multiply(accum_grad, Activations.gradient(act_fn, layer_input))
+    mult_m_v(Activations.gradient(act_fn, layer_input), accum_grad)
   end
   
   @impl Layer

@@ -24,4 +24,11 @@ defmodule Utils do
     |> Enum.map(fn row -> [add(row, vec)] end)
     |> Matrex.new
   end
+  
+  def mult_m_v(mat, vec) do # multiply matrix to vector: m*v in nummpy
+    mat
+    |> list_of_rows 
+    |> Enum.map(fn row -> [multiply(row, vec)] end)
+    |> Matrex.new
+  end
 end

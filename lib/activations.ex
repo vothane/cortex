@@ -1,69 +1,64 @@
 defmodule Activations do
-  @type matrex :: %Matrex{data: binary}
-  
-  @callback activate!(struct, matrex) :: matrex
-  @callback gradient!(struct, matrex) :: matrex
+  @callback activate!(struct, any) :: any
+  @callback gradient!(struct, any) :: any
   
   def activate(activation, m) do
     %module{} = activation
-    module.acivate!(activation,m)   
+    module.activate!(activation, m)   
   end
   
   def gradient(activation, m) do
     %module{} = activation
-    module.gradient!(activation,m)   
+    module.gradient!(activation, m)   
   end
 end
 
 defmodule Sigmoid do
-  defstruct [sigmoid: &Sigmoid.sigmoid/1]
+  defstruct [name: :sigmoid]
   
   @behaviour Activations
   
   @impl Activations
   def activate!(sigmoid, m) do
-    f = Map.get(sigmoid, :sigmoid)
-    Matrex.apply(m, f)
+    Matrex.apply(m, &sigmoid/1)
   end
   
   @impl Activations
   def gradient!(sigmoid, m) do # derivative of sigmoid
-    f = Map.get(sigmoid, :sigmoid)
-    dfx = &(f.(&1) * (1.0 - f.(&1)))
+    dfx = &(sigmoid(&1) * (1.0 - sigmoid(&1)))
     Matrex.apply(m, dfx)
   end    
   
-  defp sigmoid(x), do: 1.0 / (1.0 + :math.exp(-x)) 
+  def sigmoid(x), do: 1.0 / (1.0 + :math.exp(-x)) 
 end
 
 defmodule TanH do
-  defstruct [tanh: &(:math.tanh(&1))]
+  defstruct [name: :tanh]
   
   @behaviour Activations
   
   @impl Activations
   def activate!(tanh, m) do
-    f = Map.get(tanh, :tanh)
-    Matrex.apply(m, f)
+    Matrex.apply(m, &tanh/1)
   end
   
   @impl Activations
   def gradient!(tanh, m) do # derivative of tanh
-    f = Map.get(tanh, :tanh)
-    dfx = &(1 - :math.pow(f.(&1), 2))
+    dfx = &(1 - :math.pow(tanh(&1), 2))
     Matrex.apply(m, dfx)
   end
+  
+  def tanh(x), do: :math.tanh(x)
 end  
 
 defmodule ReLU do
-  defstruct [relu: &ReLu.relu/1]
+  defstruct [relu: :relu]
   
   @behaviour Activations
   
   @impl Activations
   def activate!(relu, m) do
-    f = Map.get(relu, :relu)
-    Matrex.apply(m, f)
+    Matrex.apply(m, &relu/1)
   end
 
   @impl Activations
@@ -71,5 +66,5 @@ defmodule ReLU do
     Matrex.apply(m, &(if &1 >= 0, do: 1, else: 0))
   end
   
-  defp relu(x), do: if x >= 0, do: x, else: 0
+  def relu(x), do: if x >= 0, do: x, else: 0
 end  

@@ -52,7 +52,7 @@ defmodule TanH do
 end  
 
 defmodule ReLU do
-  defstruct [relu: :relu]
+  defstruct [name: :relu]
   
   @behaviour Activations
   

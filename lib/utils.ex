@@ -31,4 +31,17 @@ defmodule Utils do
     |> Enum.map(fn row -> [multiply(row, vec)] end)
     |> Matrex.new
   end
+  
+  def clip(m, min, max) do # same as numpy clip
+    f = fn x -> Utils.norm(x, min, max) end
+    Matrex.apply(m, f)
+  end
+  
+  def norm(x, min, max) do
+    cond do
+      x < min -> min
+      x > max -> max
+      true -> x
+    end
+  end
 end

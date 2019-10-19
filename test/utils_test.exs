@@ -32,5 +32,10 @@ defmodule UtilsTest do
                               [4, 4, 4, 4, 4]])
   end
   
-  
+  test "clipping of probabilities like numpy" do
+    m1 = Utils.clip(Matrex.new([[0.5, 0.5]]), 1.0e-15, 1-1.0e-15)
+    m2 = Utils.clip(Matrex.new([[-0.1, 1.1]]), 1.0e-15, 1-1.0e-15)
+    assert m1 == Matrex.new([[0.5, 0.5]])
+    assert m2 == Matrex.new([[1.0e-15, 1-1.0e-15]])   
+  end
 end  

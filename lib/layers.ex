@@ -12,6 +12,8 @@ defmodule Layer do
 end
 
 defmodule Dense do
+  defstruct [layer_input: nil, shape_input: nil, n: nil, trainable: true, weights: nil, bias: nil, w_opt: nil, bias_opt: nil, output_shape: nil]
+  
   import Matrex
   import Optimizer
   import Utils
@@ -19,8 +21,6 @@ defmodule Dense do
   alias Matrex
   alias Dense
   alias Utils
-  
-  defstruct [layer_input: nil, shape_input: nil, n: nil, trainable: true, weights: nil, bias: nil, w_opt: nil, bias_opt: nil, output_shape: nil]
   
   @behaviour Layer
   
@@ -84,11 +84,10 @@ defmodule Dense do
 end
 
 defmodule Activation do
-
+  defstruct [activation_fn: nil, input: nil, trainable: true, name: nil]
+  
   import Matrex
   import Utils
-  
-  defstruct [activation_fn: nil, input: nil, trainable: true, name: nil]
   
   @behaviour Layer
   
@@ -125,3 +124,40 @@ defmodule Activation do
     Agent.start_link(fn -> %Activation{activation_fn: activation} end)
   end
 end
+
+defmodule Flatten do
+  defstruct [prev_shape: nil, input_shape: nil, trainable: true, name: nil]
+  
+  @impl Layer
+  def forward_propogate(flatten_layer, m) do
+    {rows, cols} = shape_m = Matrex.size(m)
+    put(flatten_layer, :prev_shape, shape_m)
+    Matrex.reshape(m, 1, rows * cols)
+  end
+  
+  @impl Layer
+  def backward_propogate(flatten_layer, accum_grad) do
+    Matrex.reshape(accum_grad, get(flatten_layer, :prev_shape))
+  end
+  
+  @impl Layer
+  def output_shape(flatten_layer) do
+    {rows, cols} = Matrex.size(get(flatten_layer, :input_shape))
+    {rows * cols, 1}
+  end
+  
+  @impl Layer
+  def get(flatten_layer, key) do
+    Agent.get(flatten_layer, &Map.get(&1, key))
+  end
+  
+  @impl Layer
+  def put(flatten_layer, key, value) do
+    Agent.update(flatten_layer, &Map.put(&1, key, value))
+  end
+  
+  def flatten(%{input_shape: input_shape}) do
+    Agent.start_link(fn -> %Flatten{input_shape: input_shape} end)
+  end    
+end
+

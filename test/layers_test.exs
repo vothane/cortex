@@ -30,6 +30,17 @@ defmodule LayerTest do
     #assert bias == Matrex.new([[0.5, 0.5]])
     assert updates == Matrex.new([[0.5, 0.5]])
   end
+   
+  test "flatten layer forward propogation" do
+    {status, flatten_layer} = Flatten.flatten(%{input_shape: {3, 3}})
+    m = Matrex.new([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    v = Flatten.forward_propogate(flatten_layer, m)
+    
+    assert v == Matrex.new([[1, 2, 3, 4, 5, 6, 7, 8, 9]])
+  end
+  
+  test "flatten layer back propogation" do
+  end  
 end
 
 defmodule ActivationsTest do

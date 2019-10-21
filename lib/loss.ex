@@ -33,9 +33,9 @@ defmodule CrossEntropy do
   @impl Loss
   def loss!(loss, y, p) do
     p = Utils.clip(p, 1.0e-15, 1-1.0e-15)
-    a = Matrex.multiply(y, Matrex.apply(p, :log))
+    a = Matrex.apply(Matrex.multiply(y, Matrex.apply(p, :log)), fn x -> -1 * x end)
     b = Matrex.multiply(Matrex.subtract(1, y), Matrex.apply(Matrex.subtract(1, p), :log))
-    Matrex.multiply(-1, Matrex.subtract(a, b))
+    Matrex.subtract(a, b)
   end
   
   @impl Loss

@@ -39,13 +39,11 @@ defmodule CrossEntropy do
   end
   
   @impl Loss
-  def gradient!(loss, y, p) do
+  def gradient!(loss, y, p) do # - (y / p) + (1 - y) / (1 - p)
     p = Utils.clip(p, 1.0e-15, 1-1.0e-15)
-    a = Matrex.divide(y, p)
-    g = Matrex.subtract(1, y)
-    h = Matrex.subtract(1, p)
-    b = Matrex.divide(g, h)
-    Matrex.multiply(-1, Matrex.add(a, b))
+    a = Matrex.apply(Matrex.divide(y, p), fn x -> -1 * x end)
+    b = Matrex.divide(Matrex.subtract(1, y), Matrex.subtract(1, p))
+    Matrex.add(a, b)
   end
 end        
 

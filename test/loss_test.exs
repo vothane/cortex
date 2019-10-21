@@ -18,9 +18,9 @@ defmodule LossTest do
     p = Matrex.new([[0.25, 0.75]])
     ce = %CrossEntropy{}
     loss = Loss.loss(ce, y, p)
-    grad = Loss.gradient(ce, y, p)
+    grad = Matrex.apply(Loss.gradient(ce, y, p), fn x -> Float.round(x, 5) end)
     
     assert loss == Matrex.new([[0.83698822, 0.83698822]])
-    #assert grad == Matrex.new([[-1.33333333, 1.33333333]])
+    assert grad == Matrex.new([[-1.33333, 1.33333]])
   end
 end  

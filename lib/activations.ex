@@ -2,13 +2,11 @@ defmodule Activations do
   @callback activate!(struct, any) :: any
   @callback gradient!(struct, any) :: any
   
-  def activate(activation, m) do
-    %module{} = activation
+  def activate(%module{} = activation, m) do
     module.activate!(activation, m)   
   end
   
-  def gradient(activation, m) do
-    %module{} = activation
+  def gradient(%module{} = activation, m) do
     module.gradient!(activation, m)   
   end
 end

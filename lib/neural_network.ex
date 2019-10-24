@@ -1,5 +1,4 @@
 defmodule NeuralNetwork do
-  
   defstruct [optimizer: nil, layers: [], loss_fn: nil, trainable?: true]
   
   def initialize(nn, optimizer, loss_fn) do
@@ -8,24 +7,20 @@ defmodule NeuralNetwork do
   end
   
   def add(nn, layer) do
-    layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
-    optimizer = Agent.get(nn, fn state -> Map.get(state, :optimizer) end)
-    %module{} = layer
+    layers = get(nn, :layers)
+    optimizer = get(nn, :optimizer)
     
     if List.last(layers) do 
       last = List.last(layers)
-      module.set_input_shape(module.output_shape(last))
+      Layer.set_input_shape(layer, Layer.get_output_shape(last))
     end
     
-    if function_exported?(module, :init, 3) do
-      module.init(layer, optimizer)
-    end
-    
-    layers_ = layers ++ layer
-    Agent.update(nn, fn state -> Map.put(state, :layers, layers_) end)
+    Layer.init(layer, optimizer)    
+    layers = List.insert_at(layers, -1, layer)
+    Agent.update(nn, fn state -> Map.put(state, :layers, layers) end)
   end
   
-  defp forward_propogate(nn, m) do
+  def forward_propogate(nn, m) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
     f = fn l -> %mod{} = l; mod end
     Enum.reduce(layers, m, &(f.(&1).forward_propogate(&1, &2)))
@@ -35,6 +30,18 @@ defmodule NeuralNetwork do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
     f = fn l -> %m{} = l; m end         
     Enum.reduce(Enum.reverse(layers), loss_grad, &(f.(&1).backward_propogate(&1, &2)))
-  end  
+  end    
+  
+  def get(nn, key) do
+    Agent.get(nn, &Map.get(&1, key))
+  end
+  
+  def put(nn, key, value) do
+    Agent.update(nn, &Map.put(&1, key, value))
+  end
+  
+  def neural_network(optimizer) do
+    Agent.start_link(fn -> %NeuralNetwork{optimizer: optimizer} end)
+  end    
 end  
 

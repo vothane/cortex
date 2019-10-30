@@ -22,7 +22,7 @@ defmodule NeuralNetwork do
   
   def forward_propogate(nn, m) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
-    f = fn l -> %mod{} = l; mod end
+    f = fn l -> %mod{} = Agent.get(l, &(&1)); mod end
     Enum.reduce(layers, m, &(f.(&1).forward_propogate(&1, &2)))
   end  
 

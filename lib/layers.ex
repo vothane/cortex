@@ -1,6 +1,6 @@
 defmodule Layer do
   @type dim :: {integer, integer}
-  @callback set_shape_input!(struct, dim) :: {:ok, {integer, integer}} | {:error, String.t}
+  @callback set_input_shape!(struct, dim) :: {:ok, {integer, integer}} | {:error, String.t}
   @callback get_output_shape!(struct) :: any
   @callback layer_name(struct, String.t) :: String.t
   @callback parameters(struct, any) :: any
@@ -11,8 +11,8 @@ defmodule Layer do
   @callback put(struct, atom, any) :: any
   
   def set_input_shape(layer, shape) do
-    %module{} = Agent.get(layer, &(&1))  
-    module.set_shape_input!(layer, shape)
+    %module{} = Agent.get(layer, &(&1))
+    module.set_input_shape!(layer, shape)
   end
   
   def get_output_shape(layer) do
@@ -32,7 +32,8 @@ defmodule Layer do
 end
 
 defmodule Dense do
-  defstruct [layer_input: nil, shape_input: nil, n: nil, trainable: true, weights: nil, bias: nil, w_opt: nil, bias_opt: nil, output_shape: nil]
+  @enforce_keys [:n]
+  defstruct [:layer_input, :shape_input, :n, :weights, :bias, :w_opt, :bias_opt, :output_shape, trainable: true]
   
   import Matrex
   import Optimizer
@@ -45,10 +46,10 @@ defmodule Dense do
   @behaviour Layer
   
   @impl Layer
-  def set_shape_input!(dense_layer, shape_input), do: put(dense_layer, :shape_input, shape_input)
+  def set_input_shape!(dense_layer, shape_input), do: put(dense_layer, :shape_input, shape_input)
   
   @impl Layer
-  def get_output_shape!(dense_layer), do: get(dense_layer, :n)
+  def get_output_shape!(dense_layer), do: {1, get(dense_layer, :n)}
  
   @impl Layer
   def layer_name(dense_layer, name), do: put(dense_layer, :name, name)
@@ -107,7 +108,7 @@ defmodule Dense do
 end
 
 defmodule Activation do
-  defstruct [activation_fn: nil, input: nil, trainable: true, name: nil]
+  defstruct [:activation_fn, :input, :name, trainable: true]
   
   import Matrex
   import Utils
@@ -115,11 +116,11 @@ defmodule Activation do
   @behaviour Layer
   
   @impl Layer
-  def set_shape_input!(activation_layer, shape_input), do: put(activation_layer, :shape_input, shape_input)
+  def set_input_shape!(activation_layer, shape_input), do: put(activation_layer, :shape_input, shape_input)
   
   @impl Layer
   def get_output_shape!(activation_layer) do
-    Matrex.size(get(activation_layer, :input))
+    get(activation_layer, :shape_input)
   end
   
   @impl Layer

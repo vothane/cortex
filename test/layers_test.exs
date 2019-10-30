@@ -50,11 +50,9 @@ defmodule ActivationsTest do
   import Matrex
 
   test "activation propogatation with sigmoid" do
-    sigmoid = %Sigmoid{}
-    {status, activ_layer} = Activation.activation(%{activation_fn: sigmoid})
+    {status, activ_layer} = Activation.activation(:sigmoid)
     m = Matrex.new([[0.5, 0.5], [0.5, 0.5]])
     
-    Activation.put(activ_layer, :activation_fn, sigmoid)
     f_m = Activation.forward_propogate(activ_layer, m)  
     forward_m = Matrex.apply(f_m, fn x -> Float.round(x, 5) end)
     
@@ -66,11 +64,9 @@ defmodule ActivationsTest do
   end
 
   test "activation propogatation with tanh" do
-    tanh = %TanH{}
-    {status, activ_layer} = Activation.activation(%{activation_fn: tanh})
+    {status, activ_layer} = Activation.activation(:tanh)
     m = Matrex.new([[0.5, 0.5], [0.5, 0.5]])
     
-    Activation.put(activ_layer, :activation_fn, tanh)
     f_m = Activation.forward_propogate(activ_layer, m)  
     forward_m = Matrex.apply(f_m, fn x -> Float.round(x, 5) end)
     
@@ -82,11 +78,9 @@ defmodule ActivationsTest do
   end
 
   test "activation propogatation with relu" do
-    relu = %ReLU{}
-    {status, activ_layer} = Activation.activation(%{activation_fn: relu})
+    {status, activ_layer} = Activation.activation(:relu)
     m = Matrex.new([[0.5, 0.5], [0.5, 0.5]])
     
-    Activation.put(activ_layer, :activation_fn, relu)
     forward_m = Activation.forward_propogate(activ_layer, m)  
     
     backward_m = Activation.backward_propogate(activ_layer, Matrex.new([[0.25, 0.25]]))  

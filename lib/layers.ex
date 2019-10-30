@@ -32,8 +32,8 @@ defmodule Layer do
 end
 
 defmodule Dense do
-  @enforce_keys [:n]
   defstruct [:layer_input, :shape_input, :n, :weights, :bias, :w_opt, :bias_opt, :output_shape, trainable: true]
+  @enforce_keys [:n]
   
   import Matrex
   import Optimizer
@@ -109,7 +109,10 @@ end
 
 defmodule Activation do
   defstruct [:activation_fn, :input, :name, trainable: true]
+  @enforce_keys [:activation_fn]
   
+  @activation_functions %{sigmoid: %Sigmoid{}, tanh: %TanH{}, relu: %ReLU{}}
+
   import Matrex
   import Utils
   
@@ -147,8 +150,8 @@ defmodule Activation do
     Agent.update(activation_layer, &Map.put(&1, key, value))
   end
   
-  def activation(%{activation_fn: activation}) do
-    Agent.start_link(fn -> %Activation{activation_fn: activation} end)
+  def activation(activation) do
+    Agent.start_link(fn -> %Activation{activation_fn: Map.get(@activation_functions, activation)} end)
   end
 end
 

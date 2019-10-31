@@ -20,7 +20,8 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(nn, Dense.dense(%{n: 1}))
     NeuralNetwork.add(nn, sigmoid_layer)
     
-    NeuralNetwork.forward_propogate(nn, Matrex.new([[1, 0]]))
+    out = NeuralNetwork.forward_propogate(nn, Matrex.new([[1, 0]]))
+    NeuralNetwork.backward_propogate(nn, out)
   end
 
 end

@@ -28,7 +28,7 @@ defmodule NeuralNetwork do
 
   def backward_propogate(nn, loss_grad) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
-    f = fn l -> %m{} = l; m end         
+    f = fn l -> %m{} = Agent.get(l, &(&1)); m end         
     Enum.reduce(Enum.reverse(layers), loss_grad, &(f.(&1).backward_propogate(&1, &2)))
   end    
   

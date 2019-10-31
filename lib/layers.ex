@@ -59,7 +59,7 @@ defmodule Dense do
   
   @impl Layer
   def forward_propogate(dense_layer, x) do 
-    put(dense_layer, :input, x)
+    put(dense_layer, :layer_input, x)
     w = get(dense_layer, :weights)
     b = get(dense_layer, :bias) 
     add_m_v(dot(x, w), b)

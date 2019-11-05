@@ -20,10 +20,10 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(nn, Dense.dense(%{n: 1}))
     NeuralNetwork.add(nn, sigmoid_layer)
     
-    training_set = [{Matrex.new([[0, 0]]), Matrex.new([[0]])}, 
-                    {Matrex.new([[0, 1]]), Matrex.new([[1]])}, 
-                    {Matrex.new([[1, 0]]), Matrex.new([[1]])}, 
-                    {Matrex.new([[1, 1]]), Matrex.new([[0]])}]
+    training_set = [{Matrex.new([[0.0, 0.0]]), Matrex.new([[0.0]])}, 
+                    {Matrex.new([[0.0, 1.0]]), Matrex.new([[1.0]])}, 
+                    {Matrex.new([[1.0, 0.0]]), Matrex.new([[1.0]])}, 
+                    {Matrex.new([[1.0, 1.0]]), Matrex.new([[0.0]])}]
 
     Enum.reduce(1..5000, [], fn(_, _) -> 
       Enum.reduce(training_set, [], fn({x, y}, _) ->
@@ -35,10 +35,10 @@ defmodule NeuralNetworkTest do
     
     is_within? = fn (y, actual, delta) -> (actual - delta) < y and (actual + delta) > y end
     
-    y_0_0 = NeuralNetwork.forward_propogate(nn, Matrex.new([[0, 0]]))
-    y_0_1 = NeuralNetwork.forward_propogate(nn, Matrex.new([[0, 1]]))
-    y_1_0 = NeuralNetwork.forward_propogate(nn, Matrex.new([[1, 0]]))
-    y_1_1 = NeuralNetwork.forward_propogate(nn, Matrex.new([[1, 1]]))
+    y_0_0 = NeuralNetwork.forward_propogate(nn, Matrex.new([[0.0, 0.0]]))
+    y_0_1 = NeuralNetwork.forward_propogate(nn, Matrex.new([[0.0, 1.0]]))
+    y_1_0 = NeuralNetwork.forward_propogate(nn, Matrex.new([[1.0, 0.0]]))
+    y_1_1 = NeuralNetwork.forward_propogate(nn, Matrex.new([[1.0, 1.0]]))
     
     # tolerance here is generous and indicates that deep learner architecture is not
     # optimal, my guess is that the tanh activation layer shouldn't be used b/c the

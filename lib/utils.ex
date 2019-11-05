@@ -44,4 +44,19 @@ defmodule Utils do
       true -> x
     end
   end
+    
+  def max_of_cols(m) do # equivalent to numpy max with parameter axis=0 & keepdims=True
+    m
+    |> transpose
+    |> max_of_rows
+    |> transpose
+  end
+  
+  def max_of_rows(m) do # equivalent to numpy max with parameter axis=1 & keepdims=True
+    m
+    |> list_of_rows
+    |> Enum.map(&max/1)
+    |> (&(Matrex.new([&1]))).()
+    |> transpose
+  end  
 end

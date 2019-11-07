@@ -158,6 +158,8 @@ end
 defmodule Flatten do
   defstruct [prev_shape: nil, input_shape: nil, trainable: true, name: nil]
   
+  @behaviour Layer
+  
   @impl Layer
   def forward_propogate(flatten_layer, m) do
     {rows, cols} = shape_m = Matrex.size(m)
@@ -193,22 +195,23 @@ defmodule Flatten do
 end
 
 defmodule Dropout do
-  defstruct [:p, :mask, :input_shape, :n, pass_through: true, trainable: true]
+  defstruct [:mask, :input_shape, :n, p: 0.2, pass_through: true, trainable: true]
+  
+  @behaviour Layer
  
   @impl Layer
   def forward_propogate(dropout_layer, m) do
     train? = get(dropout_layer, :trainable)
     prob = get(dropout_layer, :p)
-    c = 1 - get(dropout_layer, :p)
     
     if train? do
       {rows, cols} = Matrex.size(m)
-      masker = fn el -> if :rand.uniform() > prob, do: 1, else: 0 end
+      masker = fn -> if :rand.uniform() > prob, do: 1, else: 0 end
       masked = Matrex.new(rows, cols, masker)
       put(dropout_layer, :mask, masked)
-      c = masked
     end  
     
+    c = if train?, do: get(dropout_layer, :mask), else: 1 - prob
     Matrex.multiply(m, c)
   end
   
@@ -232,8 +235,8 @@ defmodule Dropout do
     Agent.update(dropout_layer, &Map.put(&1, key, value))
   end
   
-  def dropout(%{input_shape: input_shape}) do
-    Agent.start_link(fn -> %Dropout{input_shape: input_shape} end)
+  def dropout(%{}) do
+    Agent.start_link(fn -> %Dropout{} end)
   end 
 end
 

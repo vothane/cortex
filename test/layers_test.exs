@@ -54,6 +54,21 @@ defmodule LayerTest do
     
     assert 75 < sum and sum < 85
   end
+   
+  test "dropout layer backward propogate" do
+    {status, dropout_layer} = Dropout.dropout(%{})
+    m = Matrex.ones(10, 10)
+    Dropout.forward_propogate(dropout_layer, m)
+    
+    back_drops = Dropout.backward_propogate(dropout_layer, m)
+    sum = Matrex.sum(back_drops)
+    
+    # dropout should have converted 20% of the matrix (a hundred ones)
+    # to zero and with a default of 0.2 given probabality the sum will
+    # ~80 ones
+    
+    assert 75 < sum and sum < 85
+  end
 end
 
 defmodule ActivationsTest do

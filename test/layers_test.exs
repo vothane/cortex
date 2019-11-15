@@ -69,6 +69,17 @@ defmodule LayerTest do
     
     assert 75 < sum and sum < 85
   end
+   
+  test "batch norm layer forward propogate" do
+    {status, sgd} = SGD.sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
+    {status, bn_layer} = BatchNormalization.batchnorm(%{})
+    BatchNormalization.put(bn_layer, :shape_input, {2,2})
+    BatchNormalization.init!(bn_layer, sgd)
+    m = Matrex.new([[1, 2], [3, 4]])
+    forward_m = BatchNormalization.forward_propogate(bn_layer, m)
+    
+    assert forward_m == Matrex.new([[-0.99503719, -0.99503719], [ 0.99503719,  0.99503719]])
+  end
 end
 
 defmodule ActivationsTest do

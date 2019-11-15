@@ -240,3 +240,69 @@ defmodule Dropout do
   end 
 end
 
+defmodule BatchNormalization do
+  defstruct [:gamma, :beta, :running_mean, :gamma_opt, :beta_opt, :running_var, 
+             :x_centered, :stddev_inv, momentum: 0.99, eps: 0.01, trainable: true]
+  
+  @behaviour Layer
+  
+  @impl Layer
+  def init!(bn_layer, optimizer) do
+    {rows, cols} = get(bn_layer, :shape_input)
+    put(bn_layer, :gamma, Matrex.ones(rows, cols))
+    put(bn_layer, :beta, Matrex.zeros(rows, cols))
+    put(bn_layer, :gamma_opt, Optimizer.copy(optimizer))
+    put(bn_layer, :beta_opt, Optimizer.copy(optimizer))
+  end
+  
+  @impl Layer
+  def parameters(bn_layer) do
+    prod = fn ({rows, cols} = _shape) -> rows * cols end
+    prod.(Matrex.size(get(bn_layer, :gamma))) + prod.(Matrex.size(get(bn_layer, :beta)))
+  end
+  
+  @impl Layer
+  def forward_propogate(bn_layer, m) do
+    training = true # hack delete
+    if get(bn_layer, :running_mean) == nil do
+      put(bn_layer, :running_mean, Utils.mean_of_cols(m))
+      put(bn_layer, :running_var, Utils.variance_of_cols(m))
+    end
+    
+    {mean, var} = 
+      if training and get(bn_layer, :trainable) do
+        mean = Utils.mean_of_cols(m)
+        var = Utils.variance_of_cols(m)
+        put(bn_layer, :running_mean, Matrex.add(Matrex.multiply(get(bn_layer, :momentum), get(bn_layer, :running_mean)), 
+                                                Matrex.multiply((1 - get(bn_layer, :momentum)), mean)))
+        put(bn_layer, :running_var, Matrex.add(Matrex.multiply(get(bn_layer, :momentum), get(bn_layer, :running_var)),
+                                               Matrex.multiply((1 - get(bn_layer, :momentum)), var)))
+        {mean, var}
+      else
+        mean = get(bn_layer, :running_mean)
+        var = get(bn_layer, :running_var)
+        {mean, var}
+      end
+      
+    put(bn_layer, :x_centered, Matrex.apply(m, fn x, _, c -> x - Matrex.at(mean, 1, c) end))
+    put(bn_layer, :stddev_inv, Matrex.apply(Matrex.multiply(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
+    stddev_inv = get(bn_layer, :stddev_inv)
+    x_norm =  Matrex.apply(get(bn_layer, :x_centered), fn x, _, c -> Matrex.at(stddev_inv, 1, c) end)
+    Matrex.add(Matrex.multiply(get(bn_layer, :gamma), x_norm), get(bn_layer, :beta))
+  end
+  
+  @impl Layer
+  def get(flatten_layer, key) do
+    Agent.get(flatten_layer, &Map.get(&1, key))
+  end
+  
+  @impl Layer
+  def put(bn_layer, key, value) do
+    Agent.update(bn_layer, &Map.put(&1, key, value))
+  end
+  
+  def batchnorm(%{}) do
+    Agent.start_link(fn -> %BatchNormalization{} end)
+  end 
+end
+

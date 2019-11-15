@@ -58,5 +58,38 @@ defmodule Utils do
     |> Enum.map(&max/1)
     |> (&(Matrex.new([&1]))).()
     |> transpose
-  end  
+  end
+  
+  def mean_of_cols(m) do # equivalent to numpy mean with parameter axis=0
+    m
+    |> transpose
+    |> mean_of_rows
+  end
+  
+  def mean_of_rows(m) do # equivalent to numpy mean with parameter axis=1
+    num_els = fn ({rows, cols} = _shape) -> rows * cols end
+    row_mean = fn (row) -> Matrex.sum(row) / (num_els.(Matrex.size(row))) end
+    
+    m
+    |> list_of_rows
+    |> Enum.map(row_mean)
+    |> (&(Matrex.new([&1]))).()
+  end
+  
+  def variance_of_cols(m) do # equivalent to numpy var with parameter axis=1
+    m
+    |> transpose
+    |> variance_of_rows
+  end
+  
+  def variance_of_rows(m) do # equivalent to numpy var with parameter axis=1
+    means = mean_of_rows(m)
+    num_els = fn ({rows, cols} = _shape) -> rows * cols end
+    mean_fn = fn (m) -> Matrex.sum(m) / num_els.(Matrex.size(m)) end
+    sq_devs = Matrex.apply(m, fn x, row, col -> :math.pow(abs(x - Matrex.at(means, 1, row)), 2) end)
+    variances = list_of_rows(sq_devs)
+             |> Enum.map(mean_fn)
+             |> (&(Matrex.new([&1]))).()
+    variances         
+  end
 end

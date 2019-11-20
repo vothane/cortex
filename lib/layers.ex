@@ -285,9 +285,10 @@ defmodule BatchNormalization do
       end
       
     put(bn_layer, :x_centered, Matrex.apply(m, fn x, _, c -> x - Matrex.at(mean, 1, c) end))
-    put(bn_layer, :stddev_inv, Matrex.apply(Matrex.multiply(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
+    put(bn_layer, :stddev_inv, Matrex.apply(Matrex.add(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
     stddev_inv = get(bn_layer, :stddev_inv)
-    x_norm =  Matrex.apply(get(bn_layer, :x_centered), fn x, _, c -> Matrex.at(stddev_inv, 1, c) end)
+    
+    x_norm = Utils.mult_m_v(get(bn_layer, :x_centered), stddev_inv)
     Matrex.add(Matrex.multiply(get(bn_layer, :gamma), x_norm), get(bn_layer, :beta))
   end
   

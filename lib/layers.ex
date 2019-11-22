@@ -286,10 +286,40 @@ defmodule BatchNormalization do
       
     put(bn_layer, :x_centered, Matrex.apply(m, fn x, _, c -> x - Matrex.at(mean, 1, c) end))
     put(bn_layer, :stddev_inv, Matrex.apply(Matrex.add(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
-    stddev_inv = get(bn_layer, :stddev_inv)
-    
+    stddev_inv = get(bn_layer, :stddev_inv) 
     x_norm = Utils.mult_m_v(get(bn_layer, :x_centered), stddev_inv)
     Matrex.add(Matrex.multiply(get(bn_layer, :gamma), x_norm), get(bn_layer, :beta))
+  end
+  
+  @impl Layer
+  def backward_propogate(bn_layer, accum_grad) do
+    {trainable, x_centered, stddev_inv, gamma, gamma_opt, beta, beta_opt} =
+      Enum.reduce([:trainable, :x_centered, :stddev_inv, :gamma, :gamma_opt, :beta, :beta_opt], 
+        {}, fn key, vals -> Tuple.append(vals, get(bn_layer, key)) end)
+
+    if trainable do
+      x_norm = Utils.mult_m_v(x_centered, stddev_inv)
+      grad_gamma = Utils.sum_of_cols(Matrex.multiply(x_norm, accum_grad))
+      grad_beta = Utils.sum_of_cols(accum_grad)
+      put(bn_layer, :gamma, Optimizer.update(gamma_opt, gamma, grad_gamma))
+      put(bn_layer, :beta, Optimizer.update(beta_opt, beta, grad_beta))
+    end
+    
+    {batch_size, _} = Matrex.size(accum_grad)
+      
+    accum_grad = 
+      (1 / batch_size)                                                         # (1 / batch_size)
+      |> (fn(x) -> Matrex.multiply(x, gamma) end).()                           # * gamma
+      |> (fn(x) -> Matrex.multiply(x, stddev_inv) end).()                      # * stddev_inv
+      |> (fn(x) -> Matrex.multiply(x, batch_size                               # * ( batch_size
+        |> (fn(x) -> Matrex.multiply(x, accum_grad) end).()                    #     * accum_grad
+        |> (fn(x) -> Matrex.subtract(x, Utils.sum_of_cols(accum_grad)) end).() #     * sum_of_cols(accum_grad)
+        |> (fn(x) -> Matrex.subtract(x, x_centered                             #     - ( x_centered
+          |> (fn(x) -> Matrex.multiply(x, :math.pow(stddev_inv)) end).()       #         * stddev_inv**2 
+          |> (fn(x) -> Matrex.multiply(x, Utils.sum_of_cols(                   #         * sum_of_cols(accum_grad * x_centered) ) )
+            Matrex.multiply(accum_grad, x_centered))) end).()         
+        ) end).() 
+      ) end).()           
   end
   
   @impl Layer

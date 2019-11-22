@@ -67,7 +67,7 @@ defmodule LayerTest do
     # to zero and with a default of 0.2 given probabality the sum will
     # ~80 ones
     
-    assert 75 < sum and sum < 85
+    assert 70 < sum and sum < 90
   end
    
   test "batch norm layer forward propogate" do
@@ -76,9 +76,13 @@ defmodule LayerTest do
     BatchNormalization.put(bn_layer, :shape_input, {2,2})
     BatchNormalization.init!(bn_layer, sgd)
     m = Matrex.new([[1, 2], [3, 4]])
-    forward_m = BatchNormalization.forward_propogate(bn_layer, m)
+    accum_grad = Matrex.new([[0.1, 0.2]])
     
-    assert forward_m == Matrex.new([[-0.99503719, -0.99503719], [ 0.99503719,  0.99503719]])
+    forward_m = BatchNormalization.forward_propogate(bn_layer, m)
+    #backward_m = BatchNormalization.backward_propogate(bn_layer, m)
+    
+    assert forward_m == Matrex.new([[-0.99503719, -0.99503719], [0.99503719, 0.99503719]])
+    #assert backward_m == Matrex.new([[0.0, 0.0], [0.0, 0.0]])
   end
 end
 

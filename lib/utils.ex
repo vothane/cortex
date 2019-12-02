@@ -92,4 +92,9 @@ defmodule Utils do
              |> (&(Matrex.new([&1]))).()
     variances         
   end
+
+  def is_vector?(m) do
+    {rows, _} = Matrex.size(m)
+    rows == 1
+  end  
 end

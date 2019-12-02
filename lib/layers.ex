@@ -301,6 +301,7 @@ defmodule BatchNormalization do
       x_norm = Utils.mult_m_v(x_centered, stddev_inv)
       grad_gamma = Utils.sum_of_cols(Matrex.multiply(x_norm, accum_grad))
       grad_beta = Utils.sum_of_cols(accum_grad)
+      IO.inspect 1
       put(bn_layer, :gamma, Optimizer.update(gamma_opt, gamma, grad_gamma))
       put(bn_layer, :beta, Optimizer.update(beta_opt, beta, grad_beta))
     end

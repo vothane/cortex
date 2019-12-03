@@ -12,6 +12,18 @@ defmodule Numex do
       add_m_v(mat, vec)
     end  
   end
+
+  def subtract(m1, m2) do
+    num_vecs = Enum.count([m1, m2], fn m -> is_vector?(m) end)
+    
+    if Enum.member?([0, 2], num_vecs) or Enum.any?([m1, m2], &is_number/1) do
+      Matrex.subtract(m1, m2)
+    else
+      vec = List.first(Enum.filter([m1, m2], fn m -> is_vector?(m) end))
+      mat = List.first(Enum.reject([m1, m2], fn m -> is_vector?(m) end))
+      subtract_m_v(mat, vec)
+    end  
+  end
   
   def multiply(m1, m2) do
     num_vecs = Enum.count([m1, m2], fn m -> is_vector?(m) end)

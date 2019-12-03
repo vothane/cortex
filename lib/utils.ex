@@ -23,6 +23,13 @@ defmodule Utils do
     |> list_of_rows 
     |> Enum.map(fn row -> [add(row, vec)] end)
     |> Matrex.new
+  end  
+  
+  def subtract_m_v(mat, vec) do # subtract matrix to vector: m-v in nummpy
+    mat
+    |> list_of_rows 
+    |> Enum.map(fn row -> [subtract(row, vec)] end)
+    |> Matrex.new
   end
   
   def mult_m_v(mat, vec) do # multiply matrix to vector: m*v in nummpy

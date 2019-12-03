@@ -113,9 +113,6 @@ defmodule Activation do
   @enforce_keys [:activation_fn]
   
   @activation_functions %{sigmoid: %Sigmoid{}, tanh: %TanH{}, relu: %ReLU{}}
-
-  import Matrex
-  import Utils
   
   @behaviour Layer
   
@@ -213,12 +210,12 @@ defmodule Dropout do
     end  
     
     c = if train?, do: get(dropout_layer, :mask), else: 1 - prob
-    Matrex.multiply(m, c)
+    Numex.multiply(m, c)
   end
   
   @impl Layer
   def backward_propogate(dropout_layer, accum_grad) do
-    Matrex.multiply(accum_grad, get(dropout_layer, :mask))
+    Numex.multiply(accum_grad, get(dropout_layer, :mask))
   end
   
   @impl Layer
@@ -274,10 +271,10 @@ defmodule BatchNormalization do
       if training and get(bn_layer, :trainable) do
         mean = Utils.mean_of_cols(m)
         var = Utils.variance_of_cols(m)
-        put(bn_layer, :running_mean, Matrex.add(Matrex.multiply(get(bn_layer, :momentum), get(bn_layer, :running_mean)), 
-                                                Matrex.multiply((1 - get(bn_layer, :momentum)), mean)))
-        put(bn_layer, :running_var, Matrex.add(Matrex.multiply(get(bn_layer, :momentum), get(bn_layer, :running_var)),
-                                               Matrex.multiply((1 - get(bn_layer, :momentum)), var)))
+        put(bn_layer, :running_mean, Numex.add(Numex.multiply(get(bn_layer, :momentum), get(bn_layer, :running_mean)), 
+                                               Numex.multiply((1 - get(bn_layer, :momentum)), mean)))
+        put(bn_layer, :running_var, Numex.add(Numex.multiply(get(bn_layer, :momentum), get(bn_layer, :running_var)),
+                                              Numex.multiply((1 - get(bn_layer, :momentum)), var)))
         {mean, var}
       else
         mean = get(bn_layer, :running_mean)
@@ -286,10 +283,10 @@ defmodule BatchNormalization do
       end
       
     put(bn_layer, :x_centered, Matrex.apply(m, fn x, _, c -> x - Matrex.at(mean, 1, c) end))
-    put(bn_layer, :stddev_inv, Matrex.apply(Matrex.add(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
+    put(bn_layer, :stddev_inv, Matrex.apply(Numex.add(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
     stddev_inv = get(bn_layer, :stddev_inv) 
     x_norm = Numex.multiply(get(bn_layer, :x_centered), stddev_inv)
-    Matrex.add(Matrex.multiply(get(bn_layer, :gamma), x_norm), get(bn_layer, :beta))
+    Numex.add(Numex.multiply(get(bn_layer, :gamma), x_norm), get(bn_layer, :beta))
   end
   
   @impl Layer
@@ -300,9 +297,8 @@ defmodule BatchNormalization do
 
     if trainable do
       x_norm = Numex.multiply(x_centered, stddev_inv)
-      grad_gamma = Utils.sum_of_cols(Matrex.multiply(x_norm, accum_grad))
+      grad_gamma = Utils.sum_of_cols(Numex.multiply(x_norm, accum_grad))
       grad_beta = Utils.sum_of_cols(accum_grad)
-      IO.inspect 1
       put(bn_layer, :gamma, Optimizer.update(gamma_opt, gamma, grad_gamma))
       put(bn_layer, :beta, Optimizer.update(beta_opt, beta, grad_beta))
     end
@@ -310,16 +306,16 @@ defmodule BatchNormalization do
     {batch_size, _} = Matrex.size(accum_grad)
       
     accum_grad = 
-      (1 / batch_size)                                                         # (1 / batch_size)
-      |> (fn(x) -> Matrex.multiply(x, gamma) end).()                           # * gamma
-      |> (fn(x) -> Matrex.multiply(x, stddev_inv) end).()                      # * stddev_inv
-      |> (fn(x) -> Matrex.multiply(x, batch_size                               # * ( batch_size
-        |> (fn(x) -> Matrex.multiply(x, accum_grad) end).()                    #     * accum_grad
-        |> (fn(x) -> Matrex.subtract(x, Utils.sum_of_cols(accum_grad)) end).() #     * sum_of_cols(accum_grad)
-        |> (fn(x) -> Matrex.subtract(x, x_centered                             #     - ( x_centered
-          |> (fn(x) -> Matrex.multiply(x, :math.pow(stddev_inv)) end).()       #         * stddev_inv**2 
-          |> (fn(x) -> Matrex.multiply(x, Utils.sum_of_cols(                   #         * sum_of_cols(accum_grad * x_centered) ) )
-            Matrex.multiply(accum_grad, x_centered))) end).()         
+      (1 / batch_size)                                                        # (1 / batch_size)
+      |> (fn(x) -> Numex.multiply(x, gamma) end).()                           # * gamma
+      |> (fn(x) -> Numex.multiply(x, stddev_inv) end).()                      # * stddev_inv
+      |> (fn(x) -> Numex.multiply(x, batch_size                               # * ( batch_size
+        |> (fn(x) -> Numex.multiply(x, accum_grad) end).()                    #     * accum_grad
+        |> (fn(x) -> Numex.subtract(x, Utils.sum_of_cols(accum_grad)) end).() #     * sum_of_cols(accum_grad)
+        |> (fn(x) -> Numex.subtract(x, x_centered                             #     - ( x_centered
+          |> (fn(x) -> Numex.multiply(x, :math.pow(stddev_inv)) end).()       #         * stddev_inv**2 
+          |> (fn(x) -> Numex.multiply(x, Utils.sum_of_cols(                   #         * sum_of_cols(accum_grad * x_centered) ) )
+            Numex.multiply(accum_grad, x_centered))) end).()         
         ) end).() 
       ) end).()           
   end

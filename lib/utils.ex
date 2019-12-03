@@ -94,7 +94,11 @@ defmodule Utils do
   end
 
   def is_vector?(m) do
-    {rows, _} = Matrex.size(m)
-    rows == 1
+    if is_number(m) do
+      false
+    else  
+      {rows, _} = Matrex.size(m)
+      rows == 1
+    end  
   end  
 end

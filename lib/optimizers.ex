@@ -1,3 +1,5 @@
+import Numex
+
 defmodule Optimizer do
   @callback update!(struct, any, any) :: any
   @callback get(struct, atom) :: any
@@ -31,7 +33,7 @@ defmodule SGD do # Stochastic Gradient Descent
     w_ = get(sgd, :w_)
     learning_rate = get(sgd, :learning_rate)
     momentum = get(sgd, :momentum)
-    w_ = Matrex.add(Matrex.multiply(w_, momentum), Matrex.multiply(grad_wrt_w, (1 - momentum)))
+    w_ = Numex.add(Matrex.multiply(w_, momentum), Matrex.multiply(grad_wrt_w, (1 - momentum)))
     Matrex.subtract(w, Matrex.multiply(w_, learning_rate))
   end
   

@@ -1,3 +1,12 @@
+import Matrex
+import Optimizer
+import Utils
+import Numex
+
+alias Matrex
+alias Dense
+alias Utils
+
 defmodule Layer do
   @type dim :: {integer, integer}
   @callback set_input_shape!(struct, dim) :: {:ok, {integer, integer}} | {:error, String.t}
@@ -35,14 +44,6 @@ defmodule Dense do
   defstruct [:layer_input, :shape_input, :n, :weights, :bias, :w_opt, :bias_opt, :output_shape, trainable: true]
   @enforce_keys [:n]
   
-  import Matrex
-  import Optimizer
-  import Utils
-  
-  alias Matrex
-  alias Dense
-  alias Utils
-  
   @behaviour Layer
   
   @impl Layer
@@ -62,7 +63,7 @@ defmodule Dense do
     put(dense_layer, :layer_input, x)
     w = get(dense_layer, :weights)
     b = get(dense_layer, :bias) 
-    add_m_v(dot(x, w), b)
+    Numex.add(dot(x, w), b)
   end
   
   @impl Layer
@@ -137,7 +138,7 @@ defmodule Activation do
   def backward_propogate(activation_layer, accum_grad) do
     layer_input = get(activation_layer, :input)
     act_fn = get(activation_layer, :activation_fn)
-    mult_m_v(Activations.gradient(act_fn, layer_input), accum_grad)
+    Numex.multiply(Activations.gradient(act_fn, layer_input), accum_grad)
   end
   
   @impl Layer
@@ -287,7 +288,7 @@ defmodule BatchNormalization do
     put(bn_layer, :x_centered, Matrex.apply(m, fn x, _, c -> x - Matrex.at(mean, 1, c) end))
     put(bn_layer, :stddev_inv, Matrex.apply(Matrex.add(var, get(bn_layer, :eps)), fn x -> 1 / :math.sqrt(x) end))
     stddev_inv = get(bn_layer, :stddev_inv) 
-    x_norm = Utils.mult_m_v(get(bn_layer, :x_centered), stddev_inv)
+    x_norm = Numex.multiply(get(bn_layer, :x_centered), stddev_inv)
     Matrex.add(Matrex.multiply(get(bn_layer, :gamma), x_norm), get(bn_layer, :beta))
   end
   
@@ -298,7 +299,7 @@ defmodule BatchNormalization do
         {}, fn key, vals -> Tuple.append(vals, get(bn_layer, key)) end)
 
     if trainable do
-      x_norm = Utils.mult_m_v(x_centered, stddev_inv)
+      x_norm = Numex.multiply(x_centered, stddev_inv)
       grad_gamma = Utils.sum_of_cols(Matrex.multiply(x_norm, accum_grad))
       grad_beta = Utils.sum_of_cols(accum_grad)
       IO.inspect 1

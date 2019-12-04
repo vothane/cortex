@@ -14,17 +14,9 @@ ___Convolutional Neural Networks___
 ___Recurrent Neural Networks___  
 ![](https://i.imgur.com/yhPAgPK.gif)  
   
-  
-  
->...  
->Battle-scarred shogun, explosion when my pen hits  
->Tremendous, ultra-violet shine blind forensics  
->I inspect you view through the future see millennium  
->...  
->My beats travel like a vortex, through your spine  
->To the top of your cerebral **cortex**  
->...  
->The saga continues  
->Wu-Tang, Wu-Tang  
->...  
+### Issues and ToDo
+![](https://user-images.githubusercontent.com/256203/70104032-bb050400-1634-11ea-8469-7d48f8ae1c46.gif)
+
+* weights in XOR network sometimes do not converge and failed test. Use Xavier initialization.
+* Tighten type inference scoping
 

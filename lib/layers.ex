@@ -305,19 +305,18 @@ defmodule BatchNormalization do
     
     {batch_size, _} = Matrex.size(accum_grad)
       
-    accum_grad = 
-      (1 / batch_size)                                                        # (1 / batch_size)
-      |> (fn(x) -> Numex.multiply(x, gamma) end).()                           # * gamma
-      |> (fn(x) -> Numex.multiply(x, stddev_inv) end).()                      # * stddev_inv
-      |> (fn(x) -> Numex.multiply(x, batch_size                               # * ( batch_size
-        |> (fn(x) -> Numex.multiply(x, accum_grad) end).()                    #     * accum_grad
-        |> (fn(x) -> Numex.subtract(x, Utils.sum_of_cols(accum_grad)) end).() #     * sum_of_cols(accum_grad)
-        |> (fn(x) -> Numex.subtract(x, x_centered                             #     - ( x_centered
-          |> (fn(x) -> Numex.multiply(x, :math.pow(stddev_inv)) end).()       #         * stddev_inv**2 
-          |> (fn(x) -> Numex.multiply(x, Utils.sum_of_cols(                   #         * sum_of_cols(accum_grad * x_centered) ) )
-            Numex.multiply(accum_grad, x_centered))) end).()         
-        ) end).() 
-      ) end).()           
+    (1 / batch_size)                                                                         # (1 / batch_size)
+    |> (fn(x) -> Numex.multiply(x, gamma) end).()                                            # * gamma
+    |> (fn(x) -> Numex.multiply(x, stddev_inv) end).()                                       # * stddev_inv
+    |> (fn(x) -> Numex.multiply(x, batch_size                                                # * ( batch_size
+      |> (fn(x) -> Numex.multiply(x, accum_grad) end).()                                     #     * accum_grad
+      |> (fn(x) -> Numex.subtract(x, Utils.sum_of_cols(accum_grad)) end).()                  #     * sum_of_cols(accum_grad)
+      |> (fn(x) -> Numex.subtract(x, x_centered                                              #     - ( x_centered
+        |> (fn(x) -> Numex.multiply(x, Matrex.apply(stddev_inv, &(:math.pow(&1,2)))) end).() #         * stddev_inv**2 
+        |> (fn(x) -> Numex.multiply(x, Utils.sum_of_cols(                                    #         * sum_of_cols(accum_grad * x_centered) ) )
+          Numex.multiply(accum_grad, x_centered))) end).()         
+      ) end).() 
+    ) end).()           
   end
   
   @impl Layer

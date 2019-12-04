@@ -79,10 +79,10 @@ defmodule LayerTest do
     accum_grad = Matrex.new([[0.1, 0.2]])
     
     forward_m = BatchNormalization.forward_propogate(bn_layer, m)
-    #backward_m = BatchNormalization.backward_propogate(bn_layer, m)
+    backward_m = BatchNormalization.backward_propogate(bn_layer, accum_grad)
     
     assert forward_m == Matrex.new([[-0.99503719, -0.99503719], [0.99503719, 0.99503719]])
-    #assert backward_m == Matrex.new([[0.0, 0.0], [0.0, 0.0]])
+    assert backward_m == Matrex.new([[0.0, 0.0], [0.0, 0.0]])
   end
 end
 

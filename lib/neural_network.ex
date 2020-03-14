@@ -30,8 +30,21 @@ defmodule NeuralNetwork do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
     f = fn l -> %m{} = Agent.get(l, &(&1)); m end         
     Enum.reduce(Enum.reverse(layers), loss_grad, &(f.(&1).backward_propogate(&1, &2)))
-  end    
-  
+  end 
+
+  def fit(nn, x_data, y_data, epochs) do
+    loss = get(nn, :loss_fn)
+    data = Enum.zip(x_data, y_data)
+
+    Enum.reduce(1..epochs, [], fn(_, _) ->
+      Enum.reduce(data, [], fn({x, y_true}, _) ->
+        y_pred = NeuralNetwork.forward_propogate(nn, x)
+        loss = Loss.loss(loss, y_true, y_pred)
+        NeuralNetwork.backward_propogate(nn, loss)
+      end)
+    end)
+  end
+                
   def get(nn, key) do
     Agent.get(nn, &Map.get(&1, key))
   end
@@ -42,6 +55,10 @@ defmodule NeuralNetwork do
   
   def neural_network(optimizer) do
     Agent.start_link(fn -> %NeuralNetwork{optimizer: optimizer} end)
-  end    
+  end
+  
+  def neural_network(optimizer, loss) do
+    Agent.start_link(fn -> %NeuralNetwork{optimizer: optimizer, loss_fn: loss} end)
+  end      
 end  
 

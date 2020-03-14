@@ -70,6 +70,28 @@ defmodule ReLU do
   def relu(x), do: if x >= 0, do: x, else: 0
 end  
 
+defmodule LeakyReLU do
+  defstruct [name: :leaky_relu, alpha: 0.2]
+  
+  @behaviour Activations
+  
+  defimpl Activations do
+    @impl Activations
+    def activate(lrelu, m) do
+      Matrex.apply(m, fn x -> LeakyReLU.leaky_relu_fp(x, lrelu.alpha) end)
+    end
+
+    @impl Activations
+    def gradient(lrelu, m) do
+      Matrex.apply(m, fn x -> LeakyReLU.leaky_relu_bp(x, lrelu.alpha) end)
+    end
+  end
+  
+  def leaky_relu_fp(x, alpha), do: if x >= 0, do: x, else: alpha * x
+
+  def leaky_relu_bp(x, alpha), do: if x >= 0, do: 1, else: alpha
+end  
+
 defmodule Softmax do
   defstruct [name: :softmax]
   

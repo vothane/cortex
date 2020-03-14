@@ -112,7 +112,7 @@ defmodule Activation do
   defstruct [:activation_fn, :input, :name, trainable: true]
   @enforce_keys [:activation_fn]
   
-  @activation_functions %{sigmoid: %Sigmoid{}, tanh: %TanH{}, relu: %ReLU{}}
+  @activation_functions %{sigmoid: %Sigmoid{}, tanh: %TanH{}, relu: %ReLU{}, softmax: %Softmax{}, leaky_relu: %LeakyReLU{}}
   
   @behaviour Layer
   

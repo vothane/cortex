@@ -23,6 +23,10 @@ defmodule SquareLoss do
   
   @impl Loss
   def gradient!(loss, y, y_pred), do: Matrex.multiply(-1, (Matrex.subtract(y, y_pred)))
+
+  def square_loss(%{}) do
+    Agent.start_link(fn -> %SquareLoss{} end)
+  end
 end
 
 defmodule CrossEntropy do
@@ -44,6 +48,10 @@ defmodule CrossEntropy do
     a = Matrex.apply(Matrex.divide(y, p), fn x -> -1 * x end)
     b = Matrex.divide(Matrex.subtract(1, y), Matrex.subtract(1, p))
     Matrex.add(a, b)
+  end
+
+  def cross_entropy(%{}) do
+    Agent.start_link(fn -> %CrossEntropy{} end)
   end
 end        
 

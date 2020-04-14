@@ -87,7 +87,7 @@ defmodule NeuralNetworkTest do
     {status, lrelu_layer} = activation(:leaky_relu)
     {status, softmax_layer} = activation(:softmax)
 
-    NeuralNetwork.add(discriminator, Dense.dense(%{shape_input: {1,2}, n: latent_dim}))
+    NeuralNetwork.add(discriminator, Dense.dense(%{shape_input: {1,1}, n: latent_dim}))
     NeuralNetwork.add(discriminator, lrelu_layer)
     NeuralNetwork.add(discriminator, Dense.dense(%{n: 2}))
     NeuralNetwork.add(discriminator, softmax_layer)

@@ -112,7 +112,7 @@ defmodule Softmax do
 
     @impl Activations
     def gradient(softmax, m) do
-      p = Softmax.activate!(softmax, m)
+      p = Activations.activate(softmax, m)
       Matrex.multiply(p, Matrex.subtract(1, p))
     end
   end  

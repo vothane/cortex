@@ -54,10 +54,10 @@ defmodule NeuralNetworkTest do
     assert is_within?.(Matrex.at(y_1_1, 1, 1), 0, tolerance)
   end
 
-
+  @tag timeout: :infinity
   test "simple GAN from https://blog.paperspace.com/implementing-gans-in-tensorflow/" do
     latent_dim = 16
-    samples = 1000
+    samples = 100
     scale = 100
     
     get_x = fn () -> scale * :rand.uniform - 0.5 end
@@ -106,9 +106,9 @@ defmodule NeuralNetworkTest do
     valid = Stream.repeatedly(fn -> Matrex.new([[1, 0]]) end) |> Enum.take(samples)
     fake = Stream.repeatedly(fn -> Matrex.new([[0, 1]]) end) |> Enum.take(samples)
     
-    NeuralNetwork.fit(discriminator, imgs, valid, 1000)
-    NeuralNetwork.fit(discriminator, gen_imgs, fake, 1000)
-    NeuralNetwork.fit(combined, noise, valid, 1000)
+    NeuralNetwork.fit(discriminator, imgs, valid, samples)
+    NeuralNetwork.fit(discriminator, gen_imgs, fake, samples)
+    NeuralNetwork.fit(combined, noise, valid, samples)
 
     accuracy_score =
       fn (y_true, y_pred) ->

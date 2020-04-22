@@ -34,15 +34,15 @@ defmodule LossTest do
   test "cross entropy gradient" do
     {_, ce} = cross_entropy(%{})
     assert Matrex.apply(Loss.gradient(ce, Matrex.new([[0.0, 1.0]]), Matrex.new([[0.1, 0.9]])), fn x -> Float.round(x, 5) end)
-           == Matrex.new([[1.11111, -1.11111]])
+        == Matrex.new([[1.11111, -1.11111]])
     assert Matrex.apply(Loss.gradient(ce, Matrex.new([[0.0, 1.0]]), Matrex.new([[0.2, 0.8]])), fn x -> Float.round(x, 5) end)
-           == Matrex.new([[1.25, -1.25]])
+        == Matrex.new([[1.25, -1.25]])
     assert Matrex.apply(Loss.gradient(ce, Matrex.new([[0.0, 1.0]]), Matrex.new([[0.3, 0.7]])), fn x -> Float.round(x, 5) end)
-           == Matrex.new([[1.42857, -1.42857]])
+        == Matrex.new([[1.42857, -1.42857]])
     assert Matrex.apply(Loss.gradient(ce, Matrex.new([[0.0, 1.0]]), Matrex.new([[0.4, 0.6]])), fn x -> Float.round(x, 5) end)
-           == Matrex.new([[1.66667, -1.66667]])
+        == Matrex.new([[1.66667, -1.66667]])
     assert Matrex.apply(Loss.gradient(ce, Matrex.new([[0.0, 1.0]]), Matrex.new([[0.5, 0.5]])), fn x -> Float.round(x, 5) end)
-           == Matrex.new([[2.0, -2.0]])
+        == Matrex.new([[2.0, -2.0]])
   end
 
 end

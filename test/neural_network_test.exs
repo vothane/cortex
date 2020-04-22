@@ -53,11 +53,20 @@ defmodule NeuralNetworkTest do
     assert is_within?.(Matrex.at(y_1_0, 1, 1), 1, tolerance)
     assert is_within?.(Matrex.at(y_1_1, 1, 1), 0, tolerance)
   end
+  
 
+  @doc """ 
+    true positives eqv. discrimator correctly ids true image
+    true negatives eqv. discrimator uncorrectly ids fake made by generator as true image
+    false positives eqv. discrimator uncorrectly ids true image as fake
+    false negatives eqv. discrimator correctly ids fake made by generator
+
+    Goal is to make true negatives score for generator as high as possible.
+  """
   @tag timeout: :infinity
   test "simple GAN from https://blog.paperspace.com/implementing-gans-in-tensorflow/" do
     latent_dim = 16
-    samples = 500
+    samples = 100
     scale = 100
     
     get_x = fn () -> scale * :rand.uniform - 0.5 end
@@ -117,8 +126,13 @@ defmodule NeuralNetworkTest do
         score/total
       end 
 
-     {_, true_imgs} = sample_data.()
-     y_preds = Enum.map(true_imgs, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end) 
+     {_, true_positives} = sample_data.()
+     y_preds = Enum.map(true_positives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
+     #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
+
+     true_negatives = Enum.map(noise, fn x -> NeuralNetwork.forward_propogate(generator, x) end)
+     IO.inspect(true_negatives)
+     y_preds = Enum.map(true_negatives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
      assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
   end
 end

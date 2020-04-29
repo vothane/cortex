@@ -107,5 +107,10 @@ defmodule Utils do
       {rows, _} = Matrex.size(m)
       rows == 1
     end  
+  end
+
+  def one_hot(categorical_val, num_categories) do
+    zero_hot = Matrex.zeros(1, num_categories+1)
+    one_hot = Matrex.set(zero_hot, 1, categorical_val+1, 1)
   end  
 end

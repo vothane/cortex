@@ -19,7 +19,13 @@ defmodule NeuralNetwork do
     layers = List.insert_at(layers, -1, layer)
     Agent.update(nn, fn state -> Map.put(state, :layers, layers) end)
   end
-  
+
+  def set_trainable(nn, is_trainable?) do
+    layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
+    f = fn l -> %mod{} = Agent.get(l, &(&1)); mod end
+    Enum.reduce(layers, nil, fn layer, _ -> f.(layer).put(layer, :trainable, is_trainable?) end)
+  end
+
   def forward_propogate(nn, m) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
     f = fn l -> %mod{} = Agent.get(l, &(&1)); mod end

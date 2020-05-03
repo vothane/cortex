@@ -66,7 +66,7 @@ defmodule NeuralNetworkTest do
   @tag timeout: :infinity
   test "simple GAN from https://blog.paperspace.com/implementing-gans-in-tensorflow/" do
     latent_dim = 16
-    samples = 100
+    samples = 400
     scale = 100
     
     get_x = fn () -> scale * :rand.uniform - 0.5 end
@@ -101,12 +101,6 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(discriminator, Dense.dense(%{n: 2}))
     NeuralNetwork.add(discriminator, softmax_layer)
 
-    {status, sgd3} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
-    {status, loss3} = cross_entropy(%{})
-    {status, combined} = neural_network(sgd3, loss3)
-
-    NeuralNetwork.put(combined, :layers, NeuralNetwork.get(generator, :layers) ++ NeuralNetwork.get(discriminator, :layers))
-
     {_, imgs} = sample_data.() 
 
     noise = Stream.repeatedly(fn -> Matrex.new(1, 1, fn -> :rand.normal(0, 1) end) end) |> Enum.take(samples) 
@@ -117,6 +111,19 @@ defmodule NeuralNetworkTest do
     
     NeuralNetwork.fit(discriminator, imgs, valid, samples)
     NeuralNetwork.fit(discriminator, gen_imgs, fake, samples)
+
+    {status, sgd3} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
+    {status, loss3} = cross_entropy(%{})
+    {status, combined} = neural_network(sgd3, loss3)
+
+    NeuralNetwork.set_trainable(discriminator, false)
+    disclays = NeuralNetwork.get(discriminator, :layers)
+    f = fn l -> %mod{} = Agent.get(l, &(&1)); mod end
+    train_flags = Enum.map(disclays, &(f.(&1).get(&1, :trainable)))
+    assert Enum.all?(train_flags, fn trainable -> trainable == false end)
+
+    NeuralNetwork.put(combined, :layers, NeuralNetwork.get(generator, :layers) ++ NeuralNetwork.get(discriminator, :layers))
+
     NeuralNetwork.fit(combined, noise, valid, samples)
 
     accuracy_score =

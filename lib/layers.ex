@@ -69,16 +69,17 @@ defmodule Dense do
   @impl Layer
   def backward_propogate(dense_layer, accum_grad) do 
     w = get(dense_layer, :weights)
-    bias = get(dense_layer, :bias)
-    input = get(dense_layer, :layer_input)
-    grad_w = dot_tn(input, accum_grad)
-    grad_bias = sum_of_cols(accum_grad)
-    _w =  Optimizer.update(get(dense_layer, :w_opt), w, grad_w)
-    put(dense_layer, :weights, _w)
+    if get(dense_layer, :trainable) do
+      bias = get(dense_layer, :bias)
+      input = get(dense_layer, :layer_input)
+      grad_w = dot_tn(input, accum_grad)
+      grad_bias = sum_of_cols(accum_grad)
+      _w =  Optimizer.update(get(dense_layer, :w_opt), w, grad_w)
+      put(dense_layer, :weights, _w)
     
-    _bias = Optimizer.update(get(dense_layer, :bias_opt), bias, grad_bias)
-    put(dense_layer, :bias, _bias)    
-    
+      _bias = Optimizer.update(get(dense_layer, :bias_opt), bias, grad_bias)
+      put(dense_layer, :bias, _bias)
+    end
     Matrex.dot_nt(accum_grad, w)
   end
   

@@ -68,7 +68,7 @@ defmodule NeuralNetworkTest do
     latent_dim = 16
     samples = 80
     scale = 100
-    
+
     get_x = fn () -> scale * :rand.uniform - 0.5 end
     fx = fn (x) -> Matrex.new([[10 + x*x]]) end
 
@@ -102,7 +102,6 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(discriminator, softmax_layer)
 
     {_, imgs} = sample_data.() 
-
     noise = Stream.repeatedly(fn -> Matrex.new(1, 1, fn -> :rand.normal(0, 1) end) end) |> Enum.take(samples) 
     gen_imgs = Enum.map(noise, fn x -> NeuralNetwork.forward_propogate(generator, x) end)  
     
@@ -125,6 +124,10 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.put(combined, :layers, NeuralNetwork.get(generator, :layers) ++ NeuralNetwork.get(discriminator, :layers))
 
     NeuralNetwork.fit(combined, noise, valid, samples)
+
+    combined_layers = NeuralNetwork.get(combined, :layers)
+    last_idx_gen = Enum.count(NeuralNetwork.get(generator, :layers)) - 1
+    NeuralNetwork.put(generator, :layers, Enum.slice(combined_layers, 0..last_idx_gen))
 
     accuracy_score =
       fn (y_true, y_pred) ->

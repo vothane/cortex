@@ -66,18 +66,25 @@ defmodule NeuralNetworkTest do
   @tag timeout: :infinity
   test "simple GAN from blog.paperspace.com/implementing-gans-in-tensorflow" do
     latent_dim = 16
-    samples = 80
+    samples = 600
     scale = 100
 
     get_x = fn () -> scale * :rand.uniform - 0.5 end
-    fx = fn (x) -> Matrex.new([[10 + x*x]]) end
+    fx = fn (x) -> 10 + x*x end
 
-    sample_data = 
+    sample_data =
       fn () ->
         x_data = Enum.map(1..samples, fn (_) -> get_x.() end)
-        y_trues = Enum.map(x_data, fn (x) -> fx.(x) end)
-        {x_data, y_trues}
-      end  
+        data = Enum.map(x_data, fn (x) -> Matrex.new([[x, fx.(x)]]) end)
+        data
+      end
+
+    sample_noise =
+      fn () ->
+        f = fn () -> :rand.normal(-1, 1) end
+        noise = Enum.map(1..samples, fn (_) -> Matrex.new([[f.(), f.()]]) end)
+        noise
+      end
 
     {status, sgd1} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
     {status, loss1} = cross_entropy(%{})
@@ -85,9 +92,9 @@ defmodule NeuralNetworkTest do
     {status, lrelu_layer} = activation(:leaky_relu)
     {status, tanh_layer} = activation(:tanh)
 
-    NeuralNetwork.add(generator, Dense.dense(%{shape_input: {1,1}, n: latent_dim}))
+    NeuralNetwork.add(generator, Dense.dense(%{shape_input: {1,2}, n: latent_dim}))
     NeuralNetwork.add(generator, lrelu_layer)
-    NeuralNetwork.add(generator, Dense.dense(%{n: 1}))
+    NeuralNetwork.add(generator, Dense.dense(%{n: 2}))
     NeuralNetwork.add(generator, tanh_layer)
 
     {status, sgd2} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
@@ -96,13 +103,13 @@ defmodule NeuralNetworkTest do
     {status, lrelu_layer} = activation(:leaky_relu)
     {status, softmax_layer} = activation(:softmax)
 
-    NeuralNetwork.add(discriminator, Dense.dense(%{shape_input: {1,1}, n: latent_dim}))
+    NeuralNetwork.add(discriminator, Dense.dense(%{shape_input: {1,2}, n: latent_dim}))
     NeuralNetwork.add(discriminator, lrelu_layer)
     NeuralNetwork.add(discriminator, Dense.dense(%{n: 2}))
     NeuralNetwork.add(discriminator, softmax_layer)
 
-    {_, imgs} = sample_data.() 
-    noise = Stream.repeatedly(fn -> Matrex.new(1, 1, fn -> :rand.normal(0, 1) end) end) |> Enum.take(samples) 
+    imgs = sample_data.()
+    noise = sample_noise.()
     gen_imgs = Enum.map(noise, fn x -> NeuralNetwork.forward_propogate(generator, x) end)  
     
     valid = Stream.repeatedly(fn -> Matrex.new([[1, 0]]) end) |> Enum.take(samples)
@@ -136,16 +143,21 @@ defmodule NeuralNetworkTest do
         score/total
       end 
 
-     {_, true_positives} = sample_data.()
+     true_positives = sample_data.()
      y_preds_tp = Enum.map(true_positives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
 
      IO.inspect(y_preds_tp)
      #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
 
-     true_negatives = Enum.map(noise, fn x -> NeuralNetwork.forward_propogate(generator, x) end)
+     noise_tn = sample_noise.()
+     true_negatives = Enum.map(noise_tn, fn x -> NeuralNetwork.forward_propogate(generator, x) end)
      y_preds_tn = Enum.map(true_negatives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
 
      IO.inspect(y_preds_tn)
      #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
+
+     noise_fn = sample_noise.()
+     y_preds_fn = Enum.map(noise_fn, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
+     IO.inspect(y_preds_fn)
   end
 end

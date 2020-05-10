@@ -61,4 +61,63 @@ defmodule SGD do # Stochastic Gradient Descent
     end)
     opt
   end
+end
+
+defmodule RMSprop do # Root Mean Square Propagation
+  alias RMSprop
+
+  defstruct [learning_rate: 0.01, run_avg: nil, eps: 1.0e-8, rho: 0.9]
+
+  @behaviour Optimizer
+
+  @impl Optimizer
+  def update!(rmsp, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
+    if get(rmsp, :run_avg) == nil do
+      {rows, cols} = Matrex.size(w)
+      put(rmsp, :run_avg, Matrex.zeros(rows, cols))
+    end
+
+    {learning_rate, run_avg, rho, eps} =
+      {get(rmsp, :learning_rate), get(rmsp, :run_avg), get(rmsp, :rho), get(rmsp, :eps)}
+
+    running_average =
+      Numex.add(Matrex.multiply(run_avg, rho),
+                Matrex.multiply(1 - rho, Matrex.apply(grad_wrt_w, fn x -> :math.pow(x, 2) end)))
+
+    put(rmsp, :run_avg, running_average)
+
+    #w - (learning_rate * grad_wrt_w / sqrt(running_average + eps)))
+    Matrex.subtract(w,
+      Matrex.multiply(learning_rate,
+        Matrex.divide(
+          grad_wrt_w,
+          Matrex.apply(Matrex.add(running_average, eps), &:math.sqrt/1))))
+  end
+
+  def rmsp(%{}) do
+    Agent.start_link(fn -> %RMSprop{} end)
+  end
+
+  @impl Optimizer
+  def get(rmsp, key) do
+    Agent.get(rmsp, &Map.get(&1, key))
+  end
+
+  @impl Optimizer
+  def put(rmsp, key, value) do
+    Agent.update(rmsp, &Map.put(&1, key, value))
+  end
+
+  @impl Optimizer
+  def copy!(rmsp) do
+    {status, opt} =
+    Agent.start_link(
+      fn ->
+        %RMSprop{learning_rate: get(rmsp, :learning_rate),
+                 run_avg: get(rmsp, :run_avg),
+                 eps: get(rmsp, :eps),
+                 rho: get(rmsp, :rho)}
+      end)
+    opt
+  end
 end    

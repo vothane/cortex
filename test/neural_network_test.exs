@@ -66,7 +66,7 @@ defmodule NeuralNetworkTest do
   @tag timeout: :infinity
   test "simple GAN from blog.paperspace.com/implementing-gans-in-tensorflow" do
     latent_dim = 16
-    samples = 600
+    samples = 400
     scale = 100
 
     get_x = fn () -> scale * :rand.uniform - 0.5 end

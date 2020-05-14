@@ -6,6 +6,7 @@ defmodule NeuralNetworkTest do
   import NeuralNetwork
   import CrossEntropy
   import SGD
+  import RMSprop
   import Activation
   import TanH
   import Sigmoid
@@ -86,9 +87,9 @@ defmodule NeuralNetworkTest do
         noise
       end
 
-    {status, sgd1} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
+    {status, rmsp1} = rmsp(%{})
     {status, loss1} = cross_entropy(%{})
-    {status, generator} = neural_network(sgd1, loss1)
+    {status, generator} = neural_network(rmsp1, loss1)
     {status, lrelu_layer} = activation(:leaky_relu)
     {status, tanh_layer} = activation(:tanh)
 
@@ -97,9 +98,9 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(generator, Dense.dense(%{n: 2}))
     NeuralNetwork.add(generator, tanh_layer)
 
-    {status, sgd2} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
+    {status, rmsp2} = rmsp(%{})
     {status, loss2} = cross_entropy(%{})
-    {status, discriminator} = neural_network(sgd2, loss2)
+    {status, discriminator} = neural_network(rmsp2, loss2)
     {status, lrelu_layer} = activation(:leaky_relu)
     {status, softmax_layer} = activation(:softmax)
 
@@ -118,9 +119,9 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.fit(discriminator, imgs, valid, samples)
     NeuralNetwork.fit(discriminator, gen_imgs, fake, samples)
 
-    {status, sgd3} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.01})
+    {status, rmsp3} = rmsp(%{})
     {status, loss3} = cross_entropy(%{})
-    {status, combined} = neural_network(sgd3, loss3)
+    {status, combined} = neural_network(rmsp3, loss3)
 
     NeuralNetwork.set_trainable(discriminator, false)
     disclays = NeuralNetwork.get(discriminator, :layers)
@@ -132,6 +133,7 @@ defmodule NeuralNetworkTest do
 
     NeuralNetwork.fit(combined, noise, valid, samples)
 
+    untrained_gen = generator
     combined_layers = NeuralNetwork.get(combined, :layers)
     last_idx_gen = Enum.count(NeuralNetwork.get(generator, :layers)) - 1
     NeuralNetwork.put(generator, :layers, Enum.slice(combined_layers, 0..last_idx_gen))
@@ -143,21 +145,28 @@ defmodule NeuralNetworkTest do
         score/total
       end 
 
-     true_positives = sample_data.()
-     y_preds_tp = Enum.map(true_positives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
+    true_positives = sample_data.()
+    y_preds_tp = Enum.map(true_positives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
 
-     IO.inspect(y_preds_tp)
-     #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
+    IO.puts("____________________________ true positives ____________________________ ")
+    IO.inspect(true_positives)
+    IO.inspect(y_preds_tp)
+    #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
 
-     noise_tn = sample_noise.()
-     true_negatives = Enum.map(noise_tn, fn x -> NeuralNetwork.forward_propogate(generator, x) end)
-     y_preds_tn = Enum.map(true_negatives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
+    noise_tn = sample_noise.()
+    true_negatives = Enum.map(noise_tn, fn x -> NeuralNetwork.forward_propogate(generator, x) end)
+    y_preds_tn = Enum.map(true_negatives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
 
-     IO.inspect(y_preds_tn)
-     #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
+    IO.puts("____________________________ true negatives ____________________________ ")
+    IO.inspect(true_negatives)
+    IO.inspect(y_preds_tn)
+    #assert Enum.all?(y_preds, fn pred -> pred == [1, 0] end)
 
-     noise_fn = sample_noise.()
-     y_preds_fn = Enum.map(noise_fn, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
-     IO.inspect(y_preds_fn)
+    IO.puts("____________________________ false negatives ____________________________ ")
+    noise_fn = sample_noise.()
+    false_negatives = Enum.map(noise_tn, fn x -> NeuralNetwork.forward_propogate(untrained_gen, x) end)
+    y_preds_fn = Enum.map(noise_fn, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
+    IO.inspect(false_negatives)
+    IO.inspect(y_preds_fn)
   end
 end

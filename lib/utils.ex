@@ -110,7 +110,7 @@ defmodule Utils do
   end
 
   def one_hot(categorical_val, num_categories) do
-    zero_hot = Matrex.zeros(1, num_categories+1)
+    zero_hot = Matrex.zeros(1, num_categories)
     one_hot = Matrex.set(zero_hot, 1, categorical_val+1, 1)
   end  
 end

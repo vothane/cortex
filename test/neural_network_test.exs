@@ -4,6 +4,7 @@ defmodule NeuralNetworkTest do
 
   import Matrex
   import NeuralNetwork
+  import SquareLoss
   import CrossEntropy
   import SGD
   import RMSprop
@@ -12,6 +13,7 @@ defmodule NeuralNetworkTest do
   import Sigmoid
   import Dropout
 
+  @tag timeout: :infinity
   test "cortex with XOR problem without loss function" do
     {status, sgd} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.1})
     {status, nn} = neural_network(sgd)
@@ -55,7 +57,57 @@ defmodule NeuralNetworkTest do
     assert is_within?.(Matrex.at(y_1_0, 1, 1), 1, tolerance)
     assert is_within?.(Matrex.at(y_1_1, 1, 1), 0, tolerance)
   end
+
   
+  @tag timeout: :infinity
+  test "iris classification" do
+
+    NimbleCSV.define(IrisParser, separator: ",", escape: "\0")
+
+    species_map = %{"setosa" => 0, "versicolor" => 1, "virginica" => 2}
+
+    get_data =
+      fn file ->
+        file
+        |> File.stream!(read_ahead: 160)
+        |> IrisParser.parse_stream
+        |> Stream.map(
+             fn [sepal_len, sepal_width, petal_len, petal_width, species] ->
+               x_row = [Enum.map([sepal_len, sepal_width, petal_len, petal_width], &String.to_float/1)]
+               y = Utils.one_hot(Map.get(species_map, species), 3)
+               {Matrex.new(x_row), y}
+             end)
+        |> Enum.unzip
+      end
+
+    {x_train, y_train} = get_data.("test/data/iris_train.csv")
+
+    {status, optimizer} = rmsp(%{})
+    {status, iris_classifier} = neural_network(optimizer)
+    {status, activ_layer1} = activation(:leaky_relu)
+    {status, activ_layer2} = activation(:softmax)
+
+    NeuralNetwork.add(iris_classifier, Dense.dense(%{shape_input: {1,4}, n: 10}))
+    NeuralNetwork.add(iris_classifier, activ_layer1)
+    NeuralNetwork.add(iris_classifier, Dense.dense(%{n: 3}))
+    NeuralNetwork.add(iris_classifier, activ_layer2)
+
+    epochs = 200
+
+    Enum.reduce(1..epochs, [], fn(_, _) ->
+      Enum.reduce(Enum.zip(x_train, y_train), [], fn({x, y}, _) ->
+        outputs = NeuralNetwork.forward_propogate(iris_classifier, x)
+        output_deltas = Matrex.apply(outputs, fn y_output -> y_output * (1 - y_output) * (y_output - Matrex.at(y, 1, 1)) end)
+        NeuralNetwork.backward_propogate(iris_classifier, output_deltas)
+      end)
+    end)
+
+    {x_test, y_test} = get_data.("test/data/iris_test.csv")
+    y_preds = Enum.map(x_test, fn x -> NeuralNetwork.forward_propogate(iris_classifier, x) end)
+    IO.inspect(y_test)
+    IO.inspect(y_preds)
+  end
+
 
   @doc """ 
     true positives eqv. discrimator correctly ids true image

@@ -40,9 +40,9 @@ defmodule UtilsTest do
   end
 
   test "one-hot encoding" do
-    assert Utils.one_hot(0, 3) == Matrex.new([[1.0, 0.0, 0.0, 0.0]])
-    assert Utils.one_hot(1, 3) == Matrex.new([[0.0, 1.0, 0.0, 0.0]])
-    assert Utils.one_hot(2, 3) == Matrex.new([[0.0, 0.0, 1.0, 0.0]])
-    assert Utils.one_hot(3, 3) == Matrex.new([[0.0, 0.0, 0.0, 1.0]])
+    assert Utils.one_hot(0, 4) == Matrex.new([[1.0, 0.0, 0.0, 0.0]])
+    assert Utils.one_hot(1, 4) == Matrex.new([[0.0, 1.0, 0.0, 0.0]])
+    assert Utils.one_hot(2, 4) == Matrex.new([[0.0, 0.0, 1.0, 0.0]])
+    assert Utils.one_hot(3, 4) == Matrex.new([[0.0, 0.0, 0.0, 1.0]])
   end
 end  

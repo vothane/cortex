@@ -92,7 +92,7 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(iris_classifier, Dense.dense(%{n: 3}))
     NeuralNetwork.add(iris_classifier, activ_layer2)
 
-    epochs = 200
+    epochs = 400
 
     Enum.reduce(1..epochs, [], fn(_, _) ->
       Enum.reduce(Enum.zip(x_train, y_train), [], fn({x, y}, _) ->

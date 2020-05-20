@@ -16,6 +16,8 @@ ___Convolutional Neural Networks___
 ### Issues and ToDo
 ![](https://user-images.githubusercontent.com/256203/70104032-bb050400-1634-11ea-8469-7d48f8ae1c46.gif)
 
+* find out cross entropy loss only works for two classes. fails for iris classifier since it has three
 * weights in XOR network sometimes do not converge and failed test. Use Xavier initialization.
 * Tighten type inference scoping
+* need to go back to the beginning and extensively test everything. FUCK
 

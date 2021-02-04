@@ -83,7 +83,8 @@ defmodule NeuralNetworkTest do
     {x_train, y_train} = get_data.("test/data/iris_train.csv")
 
     {status, optimizer} = rmsp(%{})
-    {status, iris_classifier} = neural_network(optimizer)
+    {status, loss} = cross_entropy(%{})
+    {status, iris_classifier} = neural_network(optimizer, loss)
     {status, activ_layer1} = activation(:leaky_relu)
     {status, activ_layer2} = activation(:softmax)
 
@@ -93,19 +94,19 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(iris_classifier, activ_layer2)
 
     epochs = 400
+    
+    IO.inspect(Enum.map(NeuralNetwork.get(iris_classifier, :layers), fn l -> Dense.get(l, :weights) end))
+    NeuralNetwork.fit(iris_classifier, x_train, y_train, epochs)
+    IO.inspect(Enum.map(NeuralNetwork.get(iris_classifier, :layers), fn l -> Dense.get(l, :weights) end))
+    
 
-    Enum.reduce(1..epochs, [], fn(_, _) ->
-      Enum.reduce(Enum.zip(x_train, y_train), [], fn({x, y}, _) ->
-        outputs = NeuralNetwork.forward_propogate(iris_classifier, x)
-        output_deltas = Matrex.apply(outputs, fn y_output -> y_output * (1 - y_output) * (y_output - Matrex.at(y, 1, 1)) end)
-        NeuralNetwork.backward_propogate(iris_classifier, output_deltas)
-      end)
-    end)
+    # {x_test, y_test} = get_data.("test/data/iris_test.csv")
 
-    {x_test, y_test} = get_data.("test/data/iris_test.csv")
-    y_preds = Enum.map(x_test, fn x -> NeuralNetwork.forward_propogate(iris_classifier, x) end)
-    IO.inspect(y_test)
-    IO.inspect(y_preds)
+    # y_preds = Enum.map(x_test, fn x -> NeuralNetwork.forward_propogate(iris_classifier, x) end)
+
+    # IO.inspect(y_test)
+    # IO.puts("------------------------------------------------------------------------------------------------------------------")
+    # IO.inspect(y_preds)
   end
 
 
@@ -200,23 +201,12 @@ defmodule NeuralNetworkTest do
     true_positives = sample_data.()
     y_preds_tp = Enum.map(true_positives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
 
-    IO.puts("____________________________ true positives ____________________________ ")
-    IO.inspect(true_positives)
-    IO.inspect(y_preds_tp)
-    #assert Enum.all?(y_preds, fn pred -> pred == [1] end)
+    assert Enum.all?(y_preds_tp, fn pred -> pred == [1] end)
 
     true_negatives = Enum.map(latent_noise.(), fn x -> NeuralNetwork.forward_propogate(generator, x) end)
     y_preds_tn = Enum.map(true_negatives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
 
-    IO.puts("____________________________ true negatives ____________________________ ")
-    IO.inspect(true_negatives)
-    IO.inspect(y_preds_tn)
-    #assert Enum.all?(y_preds, fn pred -> pred == [1] end)
+    assert Enum.all?(y_preds_tn, fn pred -> pred == [1] end)
 
-    IO.puts("____________________________ false negatives ____________________________ ")
-    false_negatives = Enum.map(latent_noise.(), fn x -> NeuralNetwork.forward_propogate(untrained_gen, x) end)
-    y_preds_fn = Enum.map(false_negatives, fn (img) -> NeuralNetwork.forward_propogate(discriminator, img) end)
-    IO.inspect(false_negatives)
-    IO.inspect(y_preds_fn)
   end
 end

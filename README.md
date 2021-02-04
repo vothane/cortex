@@ -19,5 +19,4 @@ ___Convolutional Neural Networks___
 * find out cross entropy loss only works for two classes. fails for iris classifier since it has three
 * weights in XOR network sometimes do not converge and failed test. Use Xavier initialization.
 * Tighten type inference scoping
-* need to go back to the beginning and extensively test everything. FUCK
-
+* The Neural Network suffers exploding gradients. This issue is PRIORITY.

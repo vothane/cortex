@@ -39,19 +39,19 @@ defmodule NeuralNetwork do
   end 
 
   def fit(nn, x_data, y_data, epochs) do
-    loss = get(nn, :loss_fn)
+    loss_fn = get(nn, :loss_fn)
     data = Enum.zip(x_data, y_data)
-
-    Enum.reduce_while(1..epochs, [], fn(epoch, _) ->
+    
+    Enum.reduce_while(1..epochs, nil, fn(epoch, _) ->
       if epoch <= epochs do
-        Enum.reduce(data, [], fn({x, y_true}, _) ->
+        Enum.reduce(data, nil, fn({x, y_true}, _) ->
           y_pred = NeuralNetwork.forward_propogate(nn, x)
-          loss = Loss.loss(loss, y_true, y_pred)
+          loss = Loss.loss(loss_fn, y_true, y_pred)
           NeuralNetwork.backward_propogate(nn, loss)
         end)
         {:cont, epoch + 1}
       else
-        {:halt, nn}
+        {:halt, true}
       end
     end)
   end

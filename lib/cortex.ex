@@ -1,6 +1,6 @@
 defmodule Cortex do
   @moduledoc """
-  Documentation for Cortex.
+  Documentation for `Cortex`.
   """
 
   @doc """

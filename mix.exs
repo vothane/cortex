@@ -5,7 +5,7 @@ defmodule Cortex.MixProject do
     [
       app: :cortex,
       version: "0.1.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -21,8 +21,7 @@ defmodule Cortex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:matrex, "~> 0.6"},
-      {:nimble_csv, "~> 0.7.0", only: [:test]}
+      {:nx, "~> 0.1.0-dev", github: "elixir-nx/nx", branch: "main", sparse: "nx"}
     ]
   end
 end

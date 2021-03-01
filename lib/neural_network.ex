@@ -42,18 +42,14 @@ defmodule NeuralNetwork do
     loss_fn = get(nn, :loss_fn)
     data = Enum.zip(x_data, y_data)
     
-    Enum.reduce_while(1..epochs, nil, fn(epoch, _) ->
-      if epoch <= epochs do
-        Enum.reduce(data, nil, fn({x, y_true}, _) ->
-          y_pred = NeuralNetwork.forward_propogate(nn, x)
-          loss = Loss.loss(loss_fn, y_true, y_pred)
-          NeuralNetwork.backward_propogate(nn, loss)
-        end)
-        {:cont, epoch + 1}
-      else
-        {:halt, true}
+    for _ <- 1..epochs do
+      for row <- data do
+        {x, y_true} = row
+        y_pred = NeuralNetwork.forward_propogate(nn, x)
+        loss = Loss.loss(loss_fn, y_true, y_pred)
+        NeuralNetwork.backward_propogate(nn, loss)
       end
-    end)
+    end
   end
                 
   def get(nn, key) do

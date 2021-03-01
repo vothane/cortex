@@ -19,10 +19,10 @@ defmodule SquareLoss do
   @behaviour Loss
   
   @impl Loss
-  def loss!(y, y_pred), do: Matrex.multiply(0.5, Matrex.apply(Matrex.subtract(y, y_pred), fn x -> :math.pow(x, 2) end))
+  def loss!(y, y_pred), do: Nx.multiply(0.5, Nx.map(Nx.subtract(y, y_pred), fn x -> :math.pow(x, 2) end))
   
   @impl Loss
-  def gradient!(y, y_pred), do: Matrex.multiply(-1, (Matrex.subtract(y, y_pred)))
+  def gradient!(y, y_pred), do: Nx.multiply(-1, (Nx.subtract(y, y_pred)))
 
   def square_loss(%{}) do
     Agent.start_link(fn -> %SquareLoss{} end)
@@ -39,19 +39,19 @@ defmodule CrossEntropy do
     # (- y * log(p)) - ((1 - y) * log(1 - p))
     # (a) - ((1 - y) * log(b))
     # (a) - (c)
-    p = Utils.clip(p, 1.0e-15, 1-1.0e-15)
-    a = Matrex.apply(Matrex.multiply(y, Matrex.apply(p, :log)), fn x -> -1 * x end)
-    b = Utils.clip(Matrex.subtract(1, p), 1.0e-15, 1 - 1.0e-15)
-    c = Matrex.multiply(Matrex.subtract(1, y), Matrex.apply(b, :log))
-    Matrex.subtract(a, c)
+    p = Nx.clip(p, 1.0e-15, 1-1.0e-15)
+    a = Nx.map(Nx.multiply(y, Nx.log(p)), fn x -> -1 * x end)
+    b = Nx.clip(Nx.subtract(1, p), 1.0e-15, 1 - 1.0e-15)
+    c = Nx.multiply(Nx.subtract(1, y), Nx.log(b))
+    Nx.subtract(a, c)
   end
   
   @impl Loss
   def gradient!(y, p) do
-    p = Utils.clip(p, 1.0e-15, 1-1.0e-15)
-    a = Matrex.apply(Matrex.divide(y, p), fn x -> -1 * x end)
-    b = Matrex.divide(Matrex.subtract(1, y), Matrex.subtract(1, p))
-    Matrex.add(a, b)
+    p = Nx.clip(p, 1.0e-15, 1-1.0e-15)
+    a = Nx.map(Nx.divide(y, p), fn x -> -1 * x end)
+    b = Nx.divide(Nx.subtract(1, y), Nx.subtract(1, p))
+    Nx.add(a, b)
   end
 
   def cross_entropy(%{}) do

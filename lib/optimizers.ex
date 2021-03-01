@@ -1,4 +1,5 @@
-import Numex
+import Nx
+import Utils
 
 defmodule Optimizer do
   @callback update!(struct, any, any) :: any
@@ -27,14 +28,14 @@ defmodule SGD do # Stochastic Gradient Descent
   @impl Optimizer
   def update!(sgd, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
     if get(sgd, :w_) == nil do
-      {rows, cols} = Matrex.size(w)
-      put(sgd, :w_, Matrex.zeros(rows, cols))
+      {rows, cols} = Nx.shape(w)
+      put(sgd, :w_, Utils.zeros({rows, cols}))
     end 
     w_ = get(sgd, :w_)
     learning_rate = get(sgd, :learning_rate)
     momentum = get(sgd, :momentum)
-    w_ = Numex.add(Matrex.multiply(w_, momentum), Matrex.multiply(grad_wrt_w, (1 - momentum)))
-    Matrex.subtract(w, Matrex.multiply(w_, learning_rate))
+    w_ = Nx.add(Nx.multiply(w_, momentum), Nx.multiply(grad_wrt_w, (1 - momentum)))
+    Nx.subtract(w, Nx.multiply(w_, learning_rate))
   end
   
   def sgd(%{w_: w_, momentum: m, learning_rate: lr}) do
@@ -73,25 +74,25 @@ defmodule RMSprop do # Root Mean Square Propagation
   @impl Optimizer
   def update!(rmsp, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
     if get(rmsp, :run_avg) == nil do
-      {rows, cols} = Matrex.size(w)
-      put(rmsp, :run_avg, Matrex.zeros(rows, cols))
+      {rows, cols} = Nx.shape(w)
+      put(rmsp, :run_avg, Utils.zeros({rows, cols}))
     end
 
     {learning_rate, run_avg, rho, eps} =
       {get(rmsp, :learning_rate), get(rmsp, :run_avg), get(rmsp, :rho), get(rmsp, :eps)}
 
     running_average =
-      Numex.add(Matrex.multiply(run_avg, rho),
-                Matrex.multiply(1 - rho, Matrex.apply(grad_wrt_w, fn x -> :math.pow(x, 2) end)))
+      Nx.add(Nx.multiply(run_avg, rho),
+             Nx.multiply(1 - rho, Nx.map(grad_wrt_w, fn x -> :math.pow(x, 2) end)))
 
     put(rmsp, :run_avg, running_average)
 
     #w - (learning_rate * grad_wrt_w / sqrt(running_average + eps)))
-    Matrex.subtract(w,
-      Matrex.multiply(learning_rate,
-        Matrex.divide(
+    Nx.subtract(w,
+      Nx.multiply(learning_rate,
+        Nx.divide(
           grad_wrt_w,
-          Matrex.apply(Matrex.add(running_average, eps), &:math.sqrt/1))))
+          Nx.map(Nx.add(running_average, eps), &:math.sqrt/1))))
   end
 
   def rmsp(%{}) do

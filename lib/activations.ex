@@ -4,8 +4,8 @@ defmodule Activations do
 end
 
 defprotocol Activations do
-  def activate(activation, m)
-  def gradient(activation, m)
+  def activate(activation, t)
+  def gradient(activation, t)
 end
   
 defmodule Sigmoid do
@@ -15,14 +15,14 @@ defmodule Sigmoid do
   
   defimpl Activations do
     @impl Activations
-    def activate(sigmoid, m) do
-      Matrex.apply(m, &Sigmoid.sigmoid/1)
+    def activate(sigmoid, t) do
+      Nx.map(t, &Sigmoid.sigmoid/1)
     end
   
     @impl Activations
-    def gradient(sigmoid, m) do # derivative of sigmoid
+    def gradient(sigmoid, t) do # derivative of sigmoid
       dfx = &(Sigmoid.sigmoid(&1) * (1.0 - Sigmoid.sigmoid(&1)))
-      Matrex.apply(m, dfx)
+      Nx.map(t, dfx)
     end    
   end
   
@@ -36,14 +36,14 @@ defmodule TanH do
   
   defimpl Activations do
     @impl Activations
-    def activate(tanh, m) do
-      Matrex.apply(m, &TanH.tanh/1)
+    def activate(tanh, t) do
+      Nx.map(t, &TanH.tanh/1)
     end
   
     @impl Activations
-    def gradient(tanh, m) do # derivative of tanh
+    def gradient(tanh, t) do # derivative of tanh
       dfx = &(1 - :math.pow(TanH.tanh(&1), 2))
-      Matrex.apply(m, dfx)
+      Nx.map(t, dfx)
     end
   end
   
@@ -57,13 +57,13 @@ defmodule ReLU do
   
   defimpl Activations do
     @impl Activations
-    def activate(relu, m) do
-      Matrex.apply(m, &ReLU.relu/1)
+    def activate(relu, t) do
+      Nx.map(t, &ReLU.relu/1)
     end
 
     @impl Activations
-    def gradient(relu, m) do
-      Matrex.apply(m, &(if &1 >= 0, do: 1, else: 0))
+    def gradient(relu, t) do
+      Nx.map(t, &(if &1 >= 0, do: 1, else: 0))
     end
   end
   
@@ -77,13 +77,13 @@ defmodule LeakyReLU do
   
   defimpl Activations do
     @impl Activations
-    def activate(lrelu, m) do
-      Matrex.apply(m, fn x -> LeakyReLU.leaky_relu_fp(x, lrelu.alpha) end)
+    def activate(lrelu, t) do
+      Nx.map(t, fn x -> LeakyReLU.leaky_relu_fp(x, lrelu.alpha) end)
     end
 
     @impl Activations
-    def gradient(lrelu, m) do
-      Matrex.apply(m, fn x -> LeakyReLU.leaky_relu_bp(x, lrelu.alpha) end)
+    def gradient(lrelu, t) do
+      Nx.map(t, fn x -> LeakyReLU.leaky_relu_bp(x, lrelu.alpha) end)
     end
   end
   
@@ -99,21 +99,14 @@ defmodule Softmax do
   
   defimpl Activations do
     @impl Activations
-    def activate(softmax, m) do
-      maxima = Utils.max_of_rows(m)
-      f = fn ({row, max}) -> Matrex.subtract(row, Matrex.scalar(max)) end
-      diffs = Enum.map(Enum.zip(Matrex.list_of_rows(m), Matrex.list_of_rows(maxima)), f) 
-      e_x = Matrex.apply(Matrex.new([diffs]), :exp) 
-      sums = Utils.sum_of_rows(e_x)
-      g = fn ({row, sum}) -> Matrex.divide(row, Matrex.scalar(sum)) end
-      result = Enum.map(Enum.zip(Matrex.list_of_rows(e_x), Matrex.list_of_rows(sums)), g) 
-      Matrex.new([result])
+    def activate(softmax, t) do
+      Nx.divide(Nx.exp(t), Nx.sum(Nx.exp(t)))
     end
 
     @impl Activations
-    def gradient(softmax, m) do
-      p = Activations.activate(softmax, m)
-      Matrex.multiply(p, Matrex.subtract(1, p))
+    def gradient(softmax, t) do
+      p = Activations.activate(softmax, t)
+      Nx.multiply(p, Nx.subtract(1, p))
     end
   end  
 end  

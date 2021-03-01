@@ -1,3 +1,4 @@
 %{
+  "nimble_csv": {:hex, :nimble_csv, "1.1.0", "b1dba4a86be9e03065c9de829050468e591f569100332db949e7ce71be0afc25", [:mix], [], "hexpm"},
   "nx": {:git, "https://github.com/elixir-nx/nx.git", "c4dd9e3f09350aa069de4398d6250464bc102d22", [branch: "main", sparse: "nx"]},
 }

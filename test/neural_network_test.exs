@@ -17,12 +17,12 @@ defmodule NeuralNetworkTest do
   @tag timeout: :infinity
   test "cortex with XOR problem" do
     {status, sgd} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.1})
-    {status, loss} = cross_entropy(%{})
+    {status, loss} = square_loss(%{})
     {status, nn} = neural_network(sgd, loss)
     {status, relu_layer} = activation(:relu)
     {status, sigmoid_layer} = activation(:sigmoid)
 
-    NeuralNetwork.add(nn, Dense.dense(%{shape_input: {1,2}, n: 2}))
+    NeuralNetwork.add(nn, Dense.dense(%{shape_input: {1,2}, n: 16}))
     NeuralNetwork.add(nn, relu_layer)
     NeuralNetwork.add(nn, Dense.dense(%{n: 1}))
     NeuralNetwork.add(nn, sigmoid_layer)
@@ -33,7 +33,7 @@ defmodule NeuralNetworkTest do
                     {Nx.tensor([[1.0, 1.0]]), Nx.tensor([[0.0]])}]
 
     {x_train, y_train} = Enum.unzip(training_set)
-    epochs = 1000
+    epochs = 3000
 
     NeuralNetwork.fit(nn, x_train, y_train, epochs)
 

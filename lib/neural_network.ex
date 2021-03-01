@@ -26,10 +26,10 @@ defmodule NeuralNetwork do
     Enum.reduce(layers, nil, fn layer, _ -> f.(layer).put(layer, :trainable, is_trainable?) end)
   end
 
-  def forward_propogate(nn, m) do
+  def forward_propogate(nn, t) do
     layers = Agent.get(nn, fn state -> Map.get(state, :layers) end)
     f = fn l -> %mod{} = Agent.get(l, &(&1)); mod end
-    Enum.reduce(layers, m, &(f.(&1).forward_propogate(&1, &2)))
+    Enum.reduce(layers, t, &(f.(&1).forward_propogate(&1, &2)))
   end  
 
   def backward_propogate(nn, loss_grad) do
@@ -46,7 +46,7 @@ defmodule NeuralNetwork do
       for row <- data do
         {x, y_true} = row
         y_pred = NeuralNetwork.forward_propogate(nn, x)
-        loss = Loss.loss(loss_fn, y_true, y_pred)
+        loss = Loss.gradient(loss_fn, y_true, y_pred)
         NeuralNetwork.backward_propogate(nn, loss)
       end
     end

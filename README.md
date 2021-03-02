@@ -19,4 +19,8 @@ ___Convolutional Neural Networks___
 * find out cross entropy loss only works for two classes. fails for iris classifier since it has three
 * weights in XOR network sometimes do not converge and failed test. Use Xavier initialization.
 * Tighten type inference scoping
-* The Neural Network suffers exploding gradients. This issue is PRIORITY.
+* softmax blows up since Nx.exp numerically overflows on some numbers such as 725.6691854756205.
+easy fix is to make floats 128 bit precision which IDk if erlang/elixir supports. Won't be asking
+the project people at Nx bc they probably hate me. Since I ratted out two of the main Nx contributors
+on this issue https://github.com/versilov/matrex/issues/20 - one directly, the other indirectly.
+No apologies my dudes. Play stupid games, get stupid prizes. Especially if that prize is a whirlwind.

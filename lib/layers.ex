@@ -159,9 +159,9 @@ defmodule Flatten do
   
   @impl Layer
   def forward_propogate(flatten_layer, t) do
-    {rows, cols} = shape_t = Nx.shape(t)
-    put(flatten_layer, :prev_shape, shape_t)
-    Nx.reshape(t, {1, rows * cols})
+    {rows, cols} = Nx.shape(t)
+    put(flatten_layer, :prev_shape, {rows, cols})
+    Nx.reshape(t, {1, Nx.size(t))
   end
   
   @impl Layer
@@ -172,8 +172,8 @@ defmodule Flatten do
   
   @impl Layer
   def output_shape(flatten_layer) do
-    {rows, cols} = Nx.shape(get(flatten_layer, :input_shape))
-    {rows * cols, 1}
+    {rows, cols} = get(flatten_layer, :input_shape)
+    {1, rows * cols}
   end
   
   @impl Layer

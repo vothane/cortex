@@ -74,14 +74,19 @@ defmodule NeuralNetworkTest do
         |> IrisParser.parse_stream
         |> Stream.map(
              fn [sepal_len, sepal_width, petal_len, petal_width, species] ->
-               x_row = [Enum.map([sepal_len, sepal_width, petal_len, petal_width], &String.to_float/1)]
+               x_row = Enum.map([sepal_len, sepal_width, petal_len, petal_width], &String.to_float/1)
                y = Utils.one_hot(Map.get(species_map, species), 3)
-               {Nx.tensor(x_row), Nx.tensor(y)}
+               {x_row, y}
              end)
         |> Enum.unzip
       end
 
     {x_train, y_train} = get_data.("test/data/iris_train.csv")
+    
+    x_train = Nx.tensor(x_train)
+    x_train = Nx.divide(x_train, Nx.norm(x_train, axes: [0]))
+    {rows, _} = Nx.shape(x_train)
+    x_train = Nx.to_batched_list(x_train, rows)
 
     {status, optimizer} = rmsp(%{})
     {status, loss} = cross_entropy(%{})
@@ -94,11 +99,16 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(iris_classifier, Dense.dense(%{n: 3}))
     NeuralNetwork.add(iris_classifier, activ_layer2)
 
-    epochs = 400
+    epochs = 500
     
     NeuralNetwork.fit(iris_classifier, x_train, y_train, epochs)
     
     {x_test, y_test} = get_data.("test/data/iris_test.csv")
+
+    x_test = Nx.tensor(x_test)
+    x_test = Nx.divide(x_test, Nx.norm(x_test, axes: [0]))
+    {rows, _} = Nx.shape(x_test)
+    x_test = Nx.to_batched_list(x_test, rows)
 
     y_preds = Enum.map(x_test, fn x -> NeuralNetwork.forward_propogate(iris_classifier, x) end)
 

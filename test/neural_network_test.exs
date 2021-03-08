@@ -76,25 +76,25 @@ defmodule NeuralNetworkTest do
              fn [sepal_len, sepal_width, petal_len, petal_width, species] ->
                x_row = Enum.map([sepal_len, sepal_width, petal_len, petal_width], &String.to_float/1)
                y = Utils.one_hot(Map.get(species_map, species), 3)
-               {x_row, y}
+               {x_row, Nx.tensor(y)}
              end)
         |> Enum.unzip
       end
 
     {x_train, y_train} = get_data.("test/data/iris_train.csv")
-    
-    x_train = Nx.tensor(x_train)
-    x_train = Nx.divide(x_train, Nx.norm(x_train, axes: [0]))
-    {rows, _} = Nx.shape(x_train)
-    x_train = Nx.to_batched_list(x_train, rows)
+    x_train = Utils.norm_data_cols(x_train)
+    x_train = Enum.map(x_train, fn row -> Nx.tensor(row) end)
+    IO.inspect(x_train)
 
     {status, optimizer} = rmsp(%{})
     {status, loss} = cross_entropy(%{})
     {status, iris_classifier} = neural_network(optimizer, loss)
-    {status, activ_layer1} = activation(:leaky_relu)
+    {status, activ_layer1} = activation(:relu)
     {status, activ_layer2} = activation(:softmax)
 
     NeuralNetwork.add(iris_classifier, Dense.dense(%{shape_input: {1,4}, n: 10}))
+    NeuralNetwork.add(iris_classifier, activ_layer1)
+    NeuralNetwork.add(iris_classifier, Dense.dense(%{n: 10}))
     NeuralNetwork.add(iris_classifier, activ_layer1)
     NeuralNetwork.add(iris_classifier, Dense.dense(%{n: 3}))
     NeuralNetwork.add(iris_classifier, activ_layer2)
@@ -104,11 +104,6 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.fit(iris_classifier, x_train, y_train, epochs)
     
     {x_test, y_test} = get_data.("test/data/iris_test.csv")
-
-    x_test = Nx.tensor(x_test)
-    x_test = Nx.divide(x_test, Nx.norm(x_test, axes: [0]))
-    {rows, _} = Nx.shape(x_test)
-    x_test = Nx.to_batched_list(x_test, rows)
 
     y_preds = Enum.map(x_test, fn x -> NeuralNetwork.forward_propogate(iris_classifier, x) end)
 

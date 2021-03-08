@@ -85,5 +85,29 @@ defmodule Utils do
     hot_code = Enum.map(1..num_categories, fn _ -> 0 end)
     hot_code = List.replace_at(hot_code, categorical_val-1, 1) 
     Nx.tensor(hot_code)
-  end  
+  end
+
+  def norm_data_cols(data) do
+    transpose_lol = fn data -> List.zip(data) |> Enum.map(&Tuple.to_list(&1)) end
+    
+    data_T = transpose_lol.(data)
+    
+    data_T =
+      Enum.map(data_T,
+        fn row ->
+          {min, max} = Enum.min_max(row)
+         
+          case max - min do
+            0.0 -> Enum.map(row, fn _ -> 1.0 end)
+            diff -> Enum.map(row, fn x -> (x - min) / diff end)
+          end
+        end)
+
+    transpose_lol.(data_T)
+  end
 end
+
+    # x_train = Nx.tensor(x_train)
+    # x_train = Nx.divide(x_train, Nx.norm(x_train, axes: [0]))
+    # {rows, _} = Nx.shape(x_train)
+    # x_train = Nx.to_batched_list(x_train, rows)

@@ -74,20 +74,18 @@ defmodule RMSprop do # Root Mean Square Propagation
   @impl Optimizer
   def update!(rmsp, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
     if get(rmsp, :run_avg) == nil do
-      {rows, cols} = Nx.shape(w)
-      put(rmsp, :run_avg, Utils.zeros({rows, cols}))
+      put(rmsp, :run_avg, Utils.zeros(Nx.shape(grad_wrt_w)))
     end
 
     {learning_rate, run_avg, rho, eps} =
       {get(rmsp, :learning_rate), get(rmsp, :run_avg), get(rmsp, :rho), get(rmsp, :eps)}
 
     running_average =
-      Nx.add(Nx.multiply(run_avg, rho),
-             Nx.multiply(1 - rho, Nx.map(grad_wrt_w, fn x -> :math.pow(x, 2) end)))
+      Nx.add(Nx.multiply(run_avg, rho), Nx.multiply(1 - rho, Nx.power(grad_wrt_w, 2)))
 
     put(rmsp, :run_avg, running_average)
 
-    #w - (learning_rate * grad_wrt_w / sqrt(running_average + eps)))
+    #w - self.learning_rate *  grad_wrt_w / np.sqrt(self.Eg + self.eps)
     Nx.subtract(w,
       Nx.multiply(learning_rate,
         Nx.divide(

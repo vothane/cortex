@@ -28,8 +28,7 @@ defmodule SGD do # Stochastic Gradient Descent
   @impl Optimizer
   def update!(sgd, w, grad_wrt_w) do # wrt with respect to (partial derivatives)
     if get(sgd, :w_) == nil do
-      {rows, cols} = Nx.shape(w)
-      put(sgd, :w_, Utils.zeros({rows, cols}))
+      put(sgd, :w_, Utils.zeros(Nx.shape(grad_wrt_w)))
     end 
     w_ = get(sgd, :w_)
     learning_rate = get(sgd, :learning_rate)

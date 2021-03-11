@@ -100,7 +100,8 @@ defmodule Softmax do
   defimpl Activations do
     @impl Activations
     def activate(softmax, t) do
-      Nx.divide(Nx.exp(t), Nx.sum(Nx.exp(t)))
+      e_x = Nx.exp(Nx.subtract(t, Nx.reduce_max(t)))
+      Nx.divide(e_x, Nx.sum(e_x))
     end
 
     @impl Activations

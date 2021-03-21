@@ -76,7 +76,7 @@ defmodule NeuralNetworkTest do
              fn [sepal_len, sepal_width, petal_len, petal_width, species] ->
                x_row = Enum.map([sepal_len, sepal_width, petal_len, petal_width], &String.to_float/1)
                y = Utils.one_hot(Map.get(species_map, species), 3)
-               {x_row, Nx.tensor(y)}
+               {x_row, Nx.reshape(Nx.tensor(y), {1, 3})}
              end)
         |> Enum.unzip
       end
@@ -99,7 +99,7 @@ defmodule NeuralNetworkTest do
     NeuralNetwork.add(iris_classifier, Dense.dense(%{n: 3}))
     NeuralNetwork.add(iris_classifier, activ_layer3)
 
-    epochs = 500
+    epochs = 1000
     
     NeuralNetwork.fit(iris_classifier, x_train, y_train, epochs)
     

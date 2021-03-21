@@ -37,7 +37,10 @@ defmodule CrossEntropy do
   @impl Loss
   def loss!(y, p) do
     p = Nx.clip(p, 1.0e-15, 1-1.0e-15)
-    Nx.sum(Nx.mean(Nx.multiply(y, Nx.log(p)), axes: [:output])) |> Nx.negate()
+    a = Nx.multiply(y, Nx.log(p)) |> Nx.negate
+    b = Nx.subtract(1, p)
+    c = Nx.multiply(Nx.subtract(1, y), Nx.log(b))
+    Nx.subtract(a, c)
   end
   
   @impl Loss
@@ -45,7 +48,7 @@ defmodule CrossEntropy do
     p = Nx.clip(p, 1.0e-15, 1-1.0e-15)
     a = Nx.divide(y, p)
     b = Nx.divide(Nx.subtract(1, y), Nx.subtract(1, p))
-    Nx.map(Nx.add(a, b), fn x -> -1 * x end)
+    Nx.add(a, b) |> Nx.negate()
   end
 
   def cross_entropy(%{}) do

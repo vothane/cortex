@@ -46,9 +46,9 @@ defmodule CrossEntropy do
   @impl Loss
   def gradient!(y, p) do
     p = Nx.clip(p, 1.0e-15, 1-1.0e-15)
-    a = Nx.divide(y, p)
+    a = Nx.divide(y, p) |> Nx.negate()
     b = Nx.divide(Nx.subtract(1, y), Nx.subtract(1, p))
-    Nx.add(a, b) |> Nx.negate()
+    Nx.add(a, b)
   end
 
   def cross_entropy(%{}) do

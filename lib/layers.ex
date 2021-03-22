@@ -134,7 +134,7 @@ defmodule Activation do
   def backward_propogate(activation_layer, accum_grad) do
     layer_input = get(activation_layer, :input)
     act_fn = get(activation_layer, :activation_fn)
-    Nx.multiply(Activations.gradient(act_fn, layer_input), accum_grad)
+    Nx.multiply(accum_grad, Activations.gradient(act_fn, layer_input))
   end
   
   @impl Layer

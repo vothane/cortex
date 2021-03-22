@@ -132,4 +132,15 @@ defmodule ActivationsTest do
     assert forward_m == Nx.tensor([[0.5, 0.5], [0.5, 0.5]])
     assert backward_m == Nx.tensor([[0.25, 0.25], [0.25, 0.25]])
   end
+
+  test "activation propagation with softmax" do
+    {status, activ_layer} = Activation.activation(:softmax)
+    
+    #forward_m = Activation.forward_propogate(activ_layer, Nx.tensor([[0.04147081, 0.03766723, -0.01536878]]))  
+    
+    backward_m = Activation.backward_propogate(activ_layer, Nx.tensor([[0.04147081, 0.03766723, -0.01536878]]))
+    
+    #IO.inspect(forward_m)
+    IO.inspect(backward_m)
+  end
 end

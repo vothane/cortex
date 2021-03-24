@@ -84,7 +84,6 @@ defmodule RMSprop do # Root Mean Square Propagation
 
     put(rmsp, :run_avg, running_average)
 
-    #w - self.learning_rate *  grad_wrt_w / np.sqrt(self.Eg + self.eps)
     Nx.subtract(w,
       Nx.multiply(learning_rate,
         Nx.divide(
@@ -115,6 +114,68 @@ defmodule RMSprop do # Root Mean Square Propagation
                  run_avg: get(rmsp, :run_avg),
                  eps: get(rmsp, :eps),
                  rho: get(rmsp, :rho)}
+      end)
+    opt
+  end
+end
+
+defmodule Adam do
+  alias Adam
+
+  defstruct [learning_rate: 0.001, eps: 1.0e-8, b1: 0.9, b2: 0.999, m: nil, v: nil]
+
+  @behaviour Optimizer
+
+  @impl Optimizer
+  def update!(adam, w, grad_wrt_w) do
+    if get(adam, :m) == nil do
+      put(adam, :m, Utils.zeros(Nx.shape(grad_wrt_w)))
+    end
+
+    if get(adam, :v) == nil do
+      put(adam, :v, Utils.zeros(Nx.shape(grad_wrt_w)))
+    end
+
+    {learning_rate, eps, b1, b2, m, v} =
+      {get(adam, :learning_rate), get(adam, :eps), get(adam, :b1), get(adam, :b2), get(adam, :m), get(adam, :v)}
+
+    m = Nx.add(Nx.multiply(b1, m), Nx.multiply((1 - b1), grad_wrt_w))
+    v = Nx.add(Nx.multiply(b2, v), Nx.multiply((1 - b2), Nx.power(grad_wrt_w, 2)))
+    put(adam, :m, m)
+    put(adam, :v, v)
+
+    m_hat = Nx.divide(m, (1 - b1))
+    v_hat = Nx.divide(v, (1 - b2))
+
+    w_ = Nx.divide(Nx.multiply(learning_rate, m_hat), Nx.add(Nx.map(v_hat, &:math.sqrt/1), eps))
+    Nx.subtract(w, w_)
+  end
+
+  def adam(%{}) do
+    Agent.start_link(fn -> %Adam{} end)
+  end
+
+  @impl Optimizer
+  def get(adam, key) do
+    Agent.get(adam, &Map.get(&1, key))
+  end
+
+  @impl Optimizer
+  def put(adam, key, value) do
+    Agent.update(adam, &Map.put(&1, key, value))
+  end
+
+  @impl Optimizer
+  def copy!(adam) do
+    {status, opt} =
+    Agent.start_link(
+      fn ->
+        %Adam{learning_rate: get(adam, :learning_rate),
+              eps: get(adam, :eps),
+              b1: get(adam, :b1),
+              b2: get(adam, :b2),
+              m: get(adam, :m),
+              v: get(adam, :v)}
       end)
     opt
   end

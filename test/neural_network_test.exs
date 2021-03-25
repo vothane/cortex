@@ -85,7 +85,7 @@ defmodule NeuralNetworkTest do
     x_train = Utils.norm_data_cols(x_train)
     x_train = Enum.map(x_train, fn row -> Nx.reshape(Nx.tensor(row), {1, 4}) end)
 
-    {status, optimizer} = rmsp(%{})
+    {status, optimizer} = sgd(%{w_: nil, momentum: 0.0, learning_rate: 0.1})
     {status, loss} = cross_entropy(%{})
     {status, iris_classifier} = neural_network(optimizer, loss)
     {status, activ_layer1} = activation(:relu)
